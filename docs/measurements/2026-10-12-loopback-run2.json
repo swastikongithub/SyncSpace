@@ -1,0 +1,78 @@
+{
+  "measuredAt": "2026-10-12T11:27:08.747Z",
+  "environment": {
+    "os": "Windows_NT 10.0.26200",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13700HX",
+    "cores": 24,
+    "memoryGb": 34,
+    "node": "v22.13.1",
+    "mongodb": "mongodb-memory-server (default)",
+    "transport": "loopback (same machine)"
+  },
+  "parameters": {
+    "clients": 5,
+    "sequentialEdits": 200
+  },
+  "propagationToAllCollaboratorsMs": {
+    "samples": 200,
+    "p50": 5.75,
+    "p95": 17.53,
+    "p99": 20.18,
+    "max": 21.49
+  },
+  "storedOnServerAckMs": {
+    "samples": 200,
+    "p50": 8.03,
+    "p95": 23.65,
+    "p99": 31.36,
+    "max": 31.39
+  },
+  "concurrentTyping": {
+    "writers": 5,
+    "editsPerWriter": 100,
+    "storedOnServerAckMs": {
+      "samples": 500,
+      "p50": 15.43,
+      "p95": 28.37,
+      "p99": 40.12,
+      "max": 48.84
+    },
+    "allConvergedAfterMs": 2487.58
+  },
+  "reconnectCatchUp": {
+    "missedRemoteEdits": 200,
+    "offlineLocalEdits": 20,
+    "convergedAndStoredMs": 52.46
+  },
+  "documentSize": {
+    "paragraphs": 922,
+    "stateBytes": 41849
+  },
+  "coldOpenMs": {
+    "samples": 10,
+    "p50": 32.09,
+    "p95": 50.22,
+    "p99": 50.22,
+    "max": 50.22
+  },
+  "serverMetrics": {
+    "uptimeSeconds": 5,
+    "counters": {
+      "compactions": 3,
+      "messagesIn": 2173,
+      "persistBatches": 583,
+      "updatesApplied": 702,
+      "updatesPersisted": 702,
+      "updatesReceived": 717,
+      "wsConnectionsOpened": 17
+    },
+    "latencyMs": {
+      "persistMs": {
+        "count": 583,
+        "p50": 3.08,
+        "p95": 6.95,
+        "max": 18.16
+      }
+    }
+  }
+}

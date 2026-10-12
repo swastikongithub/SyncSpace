@@ -26,7 +26,8 @@ export default [
     languageOptions: { globals: { ...globals.node } },
   },
   {
-    files: ['packages/sync-client/**/*.js', 'packages/shared/**/*.js'],
+    // e2e specs pass callbacks to page.evaluate(), which run in the browser.
+    files: ['packages/sync-client/**/*.js', 'packages/shared/**/*.js', 'e2e/**/*.js'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {

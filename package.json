@@ -23,5 +23,13 @@
     "lint": "eslint .",
     "check:js-only": "node scripts/check-js-only.js",
     "verify": "npm run check:js-only && npm run lint && npm test && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "10.0.6",
+    "fake-indexeddb": "6.2.5",
+    "fast-check": "4.10.2",
+    "mongodb-memory-server": "11.3.0",
+    "supertest": "7.3.1",
+    "vitest": "5.0.3"
   }
 }

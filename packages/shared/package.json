@@ -12,5 +12,8 @@
   },
   "scripts": {
     "test": "vitest run"
+  },
+  "dependencies": {
+    "lib0": "0.2.119"
   }
 }

@@ -1,0 +1,4 @@
+# Store and check out text files with LF so Linux CI and Docker builds see identical files.
+* text=auto eol=lf
+*.png binary
+*.woff2 binary

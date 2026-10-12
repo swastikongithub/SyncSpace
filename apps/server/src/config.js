@@ -31,6 +31,7 @@ const schema = z.object({
   DB_CONNECT_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(10),
   DB_CONNECT_RETRY_MS: z.coerce.number().int().min(10).default(500),
   WEB_DIST_DIR: z.string().optional(),
+  SERVE_WEB: booleanish.optional(),
 });
 
 export class ConfigError extends Error {}
@@ -62,6 +63,8 @@ export function readConfig(env = process.env) {
       retryMs: values.DB_CONNECT_RETRY_MS,
     },
     webDistDir: values.WEB_DIST_DIR ? resolve(values.WEB_DIST_DIR) : resolve(repoRoot, 'apps/web/dist'),
+    serveWeb: values.SERVE_WEB ?? isProduction,
+    rateLimits: { login: 10, register: 20 },
   };
 }
 

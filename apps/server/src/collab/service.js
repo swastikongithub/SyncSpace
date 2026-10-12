@@ -300,9 +300,11 @@ export function createCollabService({ config, logger, authenticate, sessions, me
     clearInterval(heartbeat);
     clearInterval(revalidation);
     const live = [...rooms.values()].map((entry) => entry.room).filter(Boolean);
-    for (const conn of connections) {
-      if (graceful) conn.close(CloseCode.ServerRestart, 'server_restart');
-      else conn.ws.terminate();
+    // wss.clients includes sockets still authenticating or waiting for their room to load,
+    // which are not yet in `connections`; leaving any open would stall wss.close() forever.
+    for (const ws of wss.clients) {
+      if (graceful) ws.close(CloseCode.ServerRestart, 'server_restart');
+      else ws.terminate();
     }
     if (graceful) await Promise.all(live.map((room) => room.drainAndClose()));
     else for (const room of live) room.destroy();

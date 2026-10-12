@@ -22,6 +22,17 @@ import {
 
 const fragmentOf = (doc) => doc.getXmlFragment('default');
 
+/** Fails a step that never settles, so a hang is reported with fast-check's seed, not a suite timeout. */
+function within(ms, label, promise) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Step did not finish within ${ms}ms: ${label}`)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 /** Applies one abstract operation to a replica, mirroring what the editor produces. */
 function applyOp(doc, op) {
   const fragment = fragmentOf(doc);
@@ -129,35 +140,40 @@ describe('system convergence through the server', () => {
           }),
         );
         try {
-          await Promise.all(devices.map(({ session }) => session.start()));
+          await within(5_000, 'start sessions', Promise.all(devices.map(({ session }) => session.start())));
           await Promise.all(devices.map(({ session }) => waitForSynced(session)));
-          for (const step of steps) {
+          for (const [index, step] of steps.entries()) {
             if (step.type === 'edit') applyOp(devices[step.client].session.doc, step.op);
             else if (step.type === 'network') devices[step.client].network.set(step.online);
             else if (step.type === 'pause') await new Promise((resolve) => setTimeout(resolve, step.ms));
-            else if (step.type === 'crash') await harness.restart({ graceful: false });
+            else if (step.type === 'crash') await within(10_000, `crash restart at step ${index}`, harness.restart({ graceful: false }));
           }
           for (const device of devices) device.network.set(true);
-          await Promise.all(devices.map(({ session }) => waitForDurable(session, 'all changes stored', { timeout: 10_000 })));
-          await waitFor(
-            () => new Set(devices.map(({ session }) => fragmentOf(session.doc).toString())).size === 1,
-            { message: 'replicas to converge', timeout: 10_000 },
-          );
+          await Promise.all(devices.map(({ session }) => waitForDurable(session, 'all changes stored')));
+          await waitFor(() => new Set(devices.map(({ session }) => fragmentOf(session.doc).toString())).size === 1, {
+            message: 'replicas to converge',
+          });
 
-          await harness.restart({ graceful: false });
+          await within(10_000, 'final crash restart', harness.restart({ graceful: false }));
           const verifier = openSession(harness, users[0], doc.id);
-          await verifier.start();
+          await within(5_000, 'start verifier', verifier.start());
           await waitForSynced(verifier);
           expect(fragmentOf(verifier.doc).toString()).toBe(fragmentOf(devices[0].session.doc).toString());
-          await verifier.destroy();
+          await within(5_000, 'destroy verifier', verifier.destroy());
         } finally {
           for (const { session, store } of devices) {
-            await session.destroy();
+            await within(5_000, 'destroy session', session.destroy());
             store.close();
           }
         }
       }),
-      { numRuns: 15 },
+      {
+        numRuns: Number(process.env.CONVERGENCE_RUNS ?? 15),
+        seed: process.env.CONVERGENCE_SEED ? Number(process.env.CONVERGENCE_SEED) : undefined,
+        // Each run starts real sockets and may crash the server, so shrinking is too slow to be
+        // useful here; report the seed and the failing script instead.
+        endOnFailure: true,
+      },
     );
   }, 240_000);
 });

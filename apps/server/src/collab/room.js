@@ -260,7 +260,7 @@ export class DocRoom {
           if (job.kind === 'ack') job.conn.sendAck(job.ackId);
           else if (job.kind === 'task') await this.#runQueuedTask(job);
         }
-        if (this.uncheckpointed >= this.settings.compactAfterUpdates) await this.#compact();
+        if (!this.closed && this.uncheckpointed >= this.settings.compactAfterUpdates) await this.#compact();
       }
     } catch (error) {
       this.fail(error);
@@ -278,7 +278,9 @@ export class DocRoom {
   }
 
   async #compact() {
-    if (this.uncheckpointed === 0) return;
+    // A closed room may hold a stale replica (another room may already own this document);
+    // compacting from it could delete newer updates.
+    if (this.uncheckpointed === 0 || this.closed) return;
     const seq = this.seq;
     try {
       await this.store.checkpoint(this.docId, Y.encodeStateAsUpdate(this.ydoc), seq);

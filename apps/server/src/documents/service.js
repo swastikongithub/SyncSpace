@@ -2,20 +2,27 @@ import { LIMITS } from '@syncspace/shared';
 import { CloseCode } from '@syncspace/shared/protocol';
 import { createInitialState, readDocumentInfo } from '../collab/ydoc.js';
 import { DocVersion } from '../history/model.js';
+import { infoFromState } from '../history/service.js';
 import { Document } from './model.js';
 
 export function createDocumentsService({ store, activity, getCollab }) {
-  async function create({ workspaceId, title = '', userId }) {
+  /** Creates a document. `state` (a Yjs update) supplies initial content; otherwise title + empty paragraph. */
+  async function create({ workspaceId, title = '', userId, state }) {
     const cleanTitle = title.trim().slice(0, LIMITS.documentTitleMax);
+    const initial = state ?? createInitialState(cleanTitle);
+    const info = state ? infoFromState(state) : null;
     const document = await Document.create({
       workspaceId,
       title: cleanTitle,
+      excerpt: info?.excerpt ?? '',
+      contentText: info?.text ?? '',
+      wordCount: info?.wordCount ?? 0,
       createdBy: userId,
       lastEditedBy: userId,
       lastEditedAt: new Date(),
     });
     try {
-      await store.initialize(document._id, createInitialState(cleanTitle), userId);
+      await store.initialize(document._id, initial, userId);
     } catch (error) {
       await Document.deleteOne({ _id: document._id });
       throw error;

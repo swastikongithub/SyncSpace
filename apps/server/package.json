@@ -9,6 +9,7 @@
     "start": "node src/index.js",
     "db:check": "node scripts/db-check.js",
     "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --reset",
     "test": "vitest run"
   },
   "dependencies": {

@@ -121,3 +121,7 @@ Measured with the WCAG 2.x relative-luminance formula (script in the development
 ## 8. Advanced graphics: Three.js, React Three Fiber, WebGPU, Spline
 
 See [ADR 0005](adr/0005-advanced-graphics.md) for the measured evaluation. Summary: the concept *is* spatial (layered sheets), but every spatial element SyncSpace needs is a handful of offset planes carrying real, selectable, screen-reader-visible text. CSS 3D transforms and SVG do that at zero bundle cost. A measured R3F prototype of the same scene cost +233 KB gzip (WebGL) or +422 KB gzip (WebGPU) for no user-visible gain, so none of the four technologies ships in the product.
+
+## 9. Design reviews
+
+Screenshot-based reviews of the built interface, their findings and the changes made are logged in [design-reviews.md](design-reviews.md).

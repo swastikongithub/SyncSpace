@@ -72,7 +72,13 @@ export function Toolbar({ editor, disabled }) {
   const chain = () => editor.chain().focus();
 
   return (
-    <div role="toolbar" aria-label="Formatting" aria-orientation="horizontal" className="flex items-center gap-0.5 overflow-x-auto px-1 py-1 [scrollbar-width:thin]">
+    <div
+      role="toolbar"
+      aria-label="Formatting"
+      aria-orientation="horizontal"
+      // On narrow screens the row scrolls sideways; the fading edge shows there is more.
+      className="flex items-center gap-0.5 overflow-x-auto px-1 py-1 pr-10 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] [scrollbar-width:none] lg:pr-1 lg:[mask-image:none]"
+    >
       <label className="sr-only" htmlFor="ss-block-style">
         Text style
       </label>

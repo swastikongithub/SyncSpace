@@ -23,6 +23,7 @@ export function DocumentTray({ workspaceId, role, activeId }) {
             <li key={document.id}>
               <NavLink
                 to={`/w/${workspaceId}/d/${document.id}`}
+                title={document.title || 'Untitled'}
                 aria-current={document.id === activeId ? 'page' : undefined}
                 className={`group flex min-h-10 items-center gap-2 rounded-md px-3 py-2 text-[0.95rem] ${
                   document.id === activeId ? 'bg-sheet font-bold text-ink shadow-sheet' : 'text-ink hover:bg-ink/5'

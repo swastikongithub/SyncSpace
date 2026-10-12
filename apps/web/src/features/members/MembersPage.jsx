@@ -170,6 +170,7 @@ export function MembersPage() {
   const members = useMembers(workspaceId);
   const invitations = useInvitations(workspaceId, manage);
   const [leaving, setLeaving] = useState(false);
+  const [removing, setRemoving] = useState(null);
 
   async function changeRole(member, next) {
     try {
@@ -252,7 +253,7 @@ export function MembersPage() {
                         ))}
                       </select>
                       {!self && (
-                        <Button size="sm" variant="quiet" onClick={() => removeMember(member)}>
+                        <Button size="sm" variant="quiet" onClick={() => setRemoving(member)}>
                           Remove
                         </Button>
                       )}
@@ -310,6 +311,28 @@ export function MembersPage() {
       )}
 
       {manage && <WorkspaceSettings workspace={workspace} />}
+
+      <Dialog open={Boolean(removing)} onClose={() => setRemoving(null)} title={`Remove ${removing?.user.name ?? ''}?`} size="sm">
+        <p className="text-sm">
+          They lose access to every document in {workspace.name} straight away, including any they have open. Edits they made are
+          kept.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="quiet" onClick={() => setRemoving(null)}>
+            Keep them
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              const target = removing;
+              setRemoving(null);
+              void removeMember(target);
+            }}
+          >
+            Remove from workspace
+          </Button>
+        </div>
+      </Dialog>
 
       <Dialog open={leaving} onClose={() => setLeaving(false)} title={`Leave ${workspace.name}?`} size="sm">
         <p className="text-sm">You’ll lose access to its documents until someone invites you again.</p>

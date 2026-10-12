@@ -39,9 +39,14 @@ function requestLock(name, steal) {
 }
 
 /**
- * @returns {Promise<{ release(): void, stolen: Promise<void> } | null>} null if another tab holds it.
+ * @param {object} options
+ * @param {boolean} options.steal     take the lock from another tab
+ * @param {boolean} options.exclusive also refuse if this tab already uses the document (background sync)
+ * @returns {Promise<{ release(): void, stolen: Promise<void> } | null>} null if the document is busy.
  */
-export async function acquireDocLock(name, { steal = false } = {}) {
+export async function acquireDocLock(name, { steal = false, exclusive = false } = {}) {
+  // An entry with no users is only waiting out its release grace period: it is free to take.
+  if (exclusive && entries.get(name)?.refs > 0) return null;
   if (!globalThis.navigator?.locks) {
     // Very old browsers: no coordination available, behave as if we hold the lock.
     return { release() {}, stolen: new Promise(() => {}) };

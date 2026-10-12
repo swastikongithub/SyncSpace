@@ -107,7 +107,8 @@ export function AuthProvider({ children }) {
       if (eraseDevice && user) await deleteUserStore(user.id).catch(() => {});
       deviceMemory.setLastUser(null);
       clearAll();
-      setState({ status: 'signed-out', user: null });
+      // When offline, the sign-in page explains that the server session ends once back online.
+      setState({ status: 'signed-out', user: null, serverSignOutPending: !serverConfirmed });
       return { serverConfirmed };
     },
     [state.user],

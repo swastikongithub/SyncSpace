@@ -88,6 +88,12 @@ export function SignInPage() {
   return (
     <AuthLayout>
       <div className="flex flex-col gap-4">
+        {auth.serverSignOutPending && (
+          <Notice tone="carbon" title="Signed out on this device">
+            You were offline, so the server hasn’t ended your session yet. SyncSpace ends it automatically the next time this
+            browser is online.
+          </Notice>
+        )}
         {auth.endedFor && (
           <Notice tone="carbon" title="Your session ended">
             Sign in again as {auth.endedFor.name} to send any changes saved on this device.

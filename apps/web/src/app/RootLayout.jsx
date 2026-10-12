@@ -1,6 +1,7 @@
 import { Navigate, Outlet, ScrollRestoration, useLocation, useRouteError } from 'react-router';
 import { deviceMemory } from '../lib/device-memory.js';
 import { SessionEndedDialog } from '../features/account/SessionEndedDialog.jsx';
+import { BackgroundSync } from '../sync/BackgroundSync.jsx';
 import { Brand } from '../ui/Brand.jsx';
 import { ButtonLink } from '../ui/Button.jsx';
 import { useAuth } from './auth.jsx';
@@ -49,7 +50,12 @@ export function RequireUser() {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);
     return <Navigate to={`/signin?next=${next}`} replace />;
   }
-  return <Outlet />;
+  return (
+    <>
+      <BackgroundSync />
+      <Outlet />
+    </>
+  );
 }
 
 export function Home() {

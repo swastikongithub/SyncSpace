@@ -163,7 +163,9 @@ export function DocumentPage() {
   }, [editor, docId, workspaceId]);
 
   const title = info?.title ?? '';
-  const canEdit = Boolean(session?.canEdit) && !state.blocked;
+  // The server states the role on connect. Before that (e.g. opened offline), use the role saved on
+  // this device; the server still refuses edits from a role that no longer allows them.
+  const canEdit = !state.blocked && (state.role ? Boolean(session?.canEdit) : can(role, 'doc.edit'));
   const canOrganize = can(role, 'doc.organize');
 
   async function togglePin() {

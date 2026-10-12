@@ -17,7 +17,6 @@ function SignOutFlow({ onClose }) {
   const [erase, setErase] = useState(false);
   const [confirmLoss, setConfirmLoss] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [offlineResult, setOfflineResult] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -29,32 +28,11 @@ function SignOutFlow({ onClose }) {
   async function signOut() {
     setBusy(true);
     try {
-      const outcome = await auth.signOut({ eraseDevice: erase });
-      if (!outcome.serverConfirmed) {
-        setOfflineResult(true);
-        setBusy(false);
-        return;
-      }
+      await auth.signOut({ eraseDevice: erase });
       navigate('/signin', { replace: true });
     } catch {
       setBusy(false);
     }
-  }
-
-  if (offlineResult) {
-    return (
-      <Dialog open onClose={() => navigate('/signin', { replace: true })} title="Signed out on this device" size="sm">
-        <p className="text-sm">
-          You’re offline, so the server hasn’t ended your session yet. SyncSpace will end it automatically the next time this
-          browser is online.
-        </p>
-        <div className="flex justify-end">
-          <Button variant="primary" onClick={() => navigate('/signin', { replace: true })}>
-            Done
-          </Button>
-        </div>
-      </Dialog>
-    );
   }
 
   return (

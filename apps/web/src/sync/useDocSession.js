@@ -4,6 +4,7 @@ import { useAuth } from '../app/auth.jsx';
 import { useLocalData } from '../app/local-data.jsx';
 import { api } from '../lib/api.js';
 import { acquireDocLock } from '../lib/doc-lock.js';
+import { claimDocument, trackTeardown } from './handoff.js';
 
 const network = typeof window !== 'undefined' ? browserNetwork(window) : null;
 
@@ -39,8 +40,11 @@ export function useDocSession(docId, { workspaceId, title, onRecovery, onRestore
     let session = null;
     let lock = null;
 
-    (async () => {
-      lock = await acquireDocLock(`syncspace:${userId}:${docId}`, { steal: takeover > 0 });
+    const key = `syncspace:${userId}:${docId}`;
+    const starting = (async () => {
+      await claimDocument(key);
+      if (cancelled) return;
+      lock = await acquireDocLock(key, { steal: takeover > 0 });
       if (cancelled) {
         lock?.release();
         return;
@@ -88,14 +92,18 @@ export function useDocSession(docId, { workspaceId, title, onRecovery, onRestore
 
     return () => {
       cancelled = true;
-      const closing = session;
-      const held = lock;
       setHandle({ phase: 'starting', session: null });
-      void (async () => {
-        await closing?.destroy();
-        held?.release();
-        void refresh();
-      })();
+      // The next session for this document waits until this one has started (if it was still
+      // starting) and flushed its last writes (see handoff.js). destroy() and release() are idempotent.
+      trackTeardown(
+        key,
+        (async () => {
+          await starting.catch(() => {});
+          await session?.destroy();
+          lock?.release();
+          void refresh();
+        })(),
+      );
     };
   }, [docId, userId, store, storeReady, takeover, refresh]);
 

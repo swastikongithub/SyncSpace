@@ -113,8 +113,12 @@ export class UserStore {
     await done(tx);
   }
 
+  /** Never records more stored edits than exist locally, even if called out of order. */
   async setDurable(docId, durableVersion) {
-    await this.#patchMeta(docId, (meta) => ({ ...meta, durableVersion: Math.max(meta.durableVersion, durableVersion) }));
+    await this.#patchMeta(docId, (meta) => ({
+      ...meta,
+      durableVersion: Math.min(meta.localVersion, Math.max(meta.durableVersion, durableVersion)),
+    }));
   }
 
   async markSynced(docId) {

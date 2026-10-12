@@ -164,6 +164,48 @@ describe('offline editing', () => {
     for (let i = 0; i < 12; i += 1) expect(bodyText(a.doc).match(new RegExp(`flaky ${i}\\b`, 'g'))).toHaveLength(1);
   });
 
+  it('never under-reports unsent edits when the tab closes while local writes lag behind the server', async () => {
+    const doc = await createDocument(owner, workspace.id);
+    const indexedDB = new IDBFactory();
+    const store = await openUserStore(owner.user.id, { indexedDB });
+    cleanup.push(() => store.close());
+
+    // Local writes are slow; once "closed", anything not yet written is lost, as when a tab closes.
+    let closed = false;
+    const real = store.forSession();
+    const slow = {
+      ...real,
+      storeUpdate: async (docId, update, version) => {
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        if (!closed) await real.storeUpdate(docId, update, version);
+      },
+      setDurable: async (docId, version) => {
+        if (!closed) await real.setDurable(docId, version);
+      },
+    };
+    const first = openSession(harness, owner, doc.id, { storage: slow, network: manualNetwork(true) });
+    await first.start();
+    await waitForSynced(first);
+    for (let i = 0; i < 15; i += 1) {
+      appendParagraph(first.doc, `line ${i}`);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+    }
+    await waitForDurable(first);
+    closed = true;
+    await first.destroy();
+
+    const reopened = openSession(harness, owner, doc.id, { storage: store.forSession(), network: manualNetwork(false) });
+    cleanup.push(() => reopened.destroy());
+    await reopened.start();
+    expect(reopened.state.durableVersion).toBeLessThanOrEqual(reopened.state.localVersion);
+    appendParagraph(reopened.doc, 'written after reopening offline');
+    expect(reopened.pendingCount).toBeGreaterThanOrEqual(1);
+    await reopened.whenSavedLocally();
+    const [meta] = await store.listDocs();
+    expect(meta.durableVersion).toBeLessThanOrEqual(meta.localVersion);
+    expect(meta.pending).toBeGreaterThanOrEqual(1);
+  });
+
   it('reconnects after a server restart that happened while the device was offline', async () => {
     const doc = await createDocument(owner, workspace.id);
     const laptop = await device(owner);

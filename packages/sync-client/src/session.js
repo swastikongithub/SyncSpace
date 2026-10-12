@@ -58,7 +58,7 @@ export class DocSyncSession extends Emitter {
     this.recoveryGuard = null;
     this.timers = { retry: null, flush: null, heartbeat: null };
     this.lastMessageAt = 0;
-    this.writeChain = Promise.resolve();
+    this.inflight = new Set();
     this.destroyed = false;
     this.started = false;
 
@@ -105,7 +105,9 @@ export class DocSyncSession extends Emitter {
           this.doc.transact(() => {
             for (const update of local.updates) Y.applyUpdate(this.doc, update, LOCAL_LOAD);
           }, LOCAL_LOAD);
-          const { localVersion = 0, durableVersion = 0 } = local.meta ?? {};
+          const { localVersion = 0, durableVersion: storedDurable = 0 } = local.meta ?? {};
+          // Never trust a stored-on-server count above the local one (older data, interrupted writes).
+          const durableVersion = Math.min(storedDurable, localVersion);
           this.#set({ hasLocalCopy: true, localVersion, savedVersion: localVersion, durableVersion });
         }
       } catch (error) {
@@ -136,7 +138,7 @@ export class DocSyncSession extends Emitter {
 
   /** Resolves when local storage has every change made so far. */
   async whenSavedLocally() {
-    await this.writeChain;
+    while (this.inflight.size > 0) await Promise.allSettled([...this.inflight]);
   }
 
   async destroy() {
@@ -147,7 +149,7 @@ export class DocSyncSession extends Emitter {
     this.unsubscribeNetwork?.();
     if (this.awareness.getLocalState() !== null) this.awareness.setLocalState(null);
     this.#dropSocket(1000, 'closed');
-    await this.writeChain.catch(() => {});
+    await this.whenSavedLocally().catch(() => {});
     this.awareness.destroy();
     this.doc.off('update', this.#onDocUpdate);
     this.doc.off('afterTransaction', this.#guardUnsyncedContent);
@@ -173,12 +175,17 @@ export class DocSyncSession extends Emitter {
     this.#publishUnsynced();
   };
 
+  /**
+   * Submits the write to IndexedDB immediately, in the same tick as the edit: a transaction that
+   * has been created survives the page closing much better than one still waiting in a queue.
+   * IndexedDB runs transactions on the same stores in creation order, so writes commit in order
+   * and a durable mark recorded later (on Ack) is ordered after the writes it covers.
+   */
   #persist(update, version) {
     if (!this.storage) return;
     this.#set({ localWritesPending: this.state.localWritesPending + 1 });
-    this.writeChain = this.writeChain
-      .then(() => this.storage.storeUpdate(this.docId, update, version))
-      .then(
+    this.#track(
+      this.storage.storeUpdate(this.docId, update, version).then(
         () => {
           const savedVersion = version ? Math.max(this.state.savedVersion, version) : this.state.savedVersion;
           this.#set({ savedVersion, localError: null, localWritesPending: this.state.localWritesPending - 1 });
@@ -186,7 +193,19 @@ export class DocSyncSession extends Emitter {
         (error) => {
           this.#set({ localError: describeError(error), localWritesPending: this.state.localWritesPending - 1 });
         },
-      );
+      ),
+    );
+  }
+
+  /** Records server durability locally. Storage caps it at the local count it has committed. */
+  #persistDurable(version) {
+    if (!this.storage) return;
+    this.#track(this.storage.setDurable(this.docId, version).catch(() => {}));
+  }
+
+  #track(promise) {
+    this.inflight.add(promise);
+    promise.finally(() => this.inflight.delete(promise));
   }
 
   #flush() {
@@ -352,7 +371,7 @@ export class DocSyncSession extends Emitter {
     const patch = { lastAckLatencyMs: now - entry.sentAt, lastServerContactAt: now };
     if (entry.coversUpTo > this.state.durableVersion) {
       patch.durableVersion = entry.coversUpTo;
-      this.storage?.setDurable(this.docId, entry.coversUpTo).catch(() => {});
+      this.#persistDurable(entry.coversUpTo);
     }
     this.#set(patch);
     this.#publishUnsynced();

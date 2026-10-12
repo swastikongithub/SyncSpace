@@ -1,0 +1,352 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/literata/opsz.css';
+@import '@fontsource-variable/literata/opsz-italic.css';
+@import '@fontsource-variable/atkinson-hyperlegible-next/wght.css';
+
+/* ---------------------------------------------------------------------------------------
+   Tokens. Named for the carbon-copy concept (see docs/design.md):
+   desk = the surface around documents, sheet = the document, ink = text,
+   graphite = secondary text, carbon = actions and unsent ("wet") ink, correction = errors.
+   --------------------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --desk: #e6e4ec;
+  --desk-raised: #efedf3;
+  --sheet: #ffffff;
+  --ink: #211d33;
+  --graphite: #5a5670;
+  --rule: #d5d2de;
+  --rule-strong: #7f7b96;
+  --carbon: #4b3fc4;
+  --carbon-strong: #3a2fa6;
+  --carbon-wash: #ece9ff;
+  --wet: #7b6fe8;
+  --correction: #b42318;
+  --correction-wash: #fdecea;
+  --caution: #6e4e00;
+  --caution-wash: #fcefc2;
+  --shadow-sheet: 0 1px 0 rgb(33 29 51 / 0.06), 0 12px 32px -18px rgb(33 29 51 / 0.35);
+
+  --ply-canary: #fbe7a1;
+  --ply-canary-ink: #8a6500;
+  --ply-rose: #f8c9d3;
+  --ply-rose-ink: #a42a4b;
+  --ply-sky: #c9ddf6;
+  --ply-sky-ink: #1d5fa8;
+  --ply-mint: #c4e9d3;
+  --ply-mint-ink: #1b7348;
+  --ply-lilac: #dcd2fa;
+  --ply-lilac-ink: #6440c8;
+  --ply-apricot: #fad5b9;
+  --ply-apricot-ink: #a44a12;
+  --ply-teal: #bde6e3;
+  --ply-teal-ink: #0e6e6a;
+  --ply-pewter: #dcdfe6;
+  --ply-pewter-ink: #4c5262;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --desk: #14121c;
+    --desk-raised: #1a1824;
+    --sheet: #1d1a28;
+    --ink: #ece9f6;
+    --graphite: #a7a2bd;
+    --rule: #34304a;
+    --rule-strong: #7d7898;
+    --carbon: #a79bff;
+    --carbon-strong: #c3baff;
+    --carbon-wash: #2a2550;
+    --wet: #8f84ff;
+    --correction: #ff8a80;
+    --correction-wash: #3b1716;
+    --caution: #f6d27a;
+    --caution-wash: #3a3010;
+    --shadow-sheet: 0 1px 0 rgb(0 0 0 / 0.4), 0 16px 36px -20px rgb(0 0 0 / 0.8);
+
+    --ply-canary: #4a3d10;
+    --ply-canary-ink: #f2ce5a;
+    --ply-rose: #4a1f2b;
+    --ply-rose-ink: #f49ab0;
+    --ply-sky: #1c3352;
+    --ply-sky-ink: #8db9f2;
+    --ply-mint: #173b2a;
+    --ply-mint-ink: #84d3a7;
+    --ply-lilac: #30265a;
+    --ply-lilac-ink: #b9a6ff;
+    --ply-apricot: #4a2a14;
+    --ply-apricot-ink: #f5ae7c;
+    --ply-teal: #123b39;
+    --ply-teal-ink: #78d0ca;
+    --ply-pewter: #2e3240;
+    --ply-pewter-ink: #b5bbc9;
+  }
+}
+
+@theme inline {
+  --color-desk: var(--desk);
+  --color-desk-raised: var(--desk-raised);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-graphite: var(--graphite);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-carbon: var(--carbon);
+  --color-carbon-strong: var(--carbon-strong);
+  --color-carbon-wash: var(--carbon-wash);
+  --color-wet: var(--wet);
+  --color-correction: var(--correction);
+  --color-correction-wash: var(--correction-wash);
+  --color-caution: var(--caution);
+  --color-caution-wash: var(--caution-wash);
+  --color-ply: var(--ply);
+  --color-ply-ink: var(--ply-ink);
+  --font-ui: 'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-writing: 'Literata Variable', 'Iowan Old Style', Georgia, serif;
+  --font-code: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+  --shadow-sheet: var(--shadow-sheet);
+}
+
+/* Ply classes set --ply / --ply-ink for any element that represents a person. */
+.ply-canary { --ply: var(--ply-canary); --ply-ink: var(--ply-canary-ink); }
+.ply-rose { --ply: var(--ply-rose); --ply-ink: var(--ply-rose-ink); }
+.ply-sky { --ply: var(--ply-sky); --ply-ink: var(--ply-sky-ink); }
+.ply-mint { --ply: var(--ply-mint); --ply-ink: var(--ply-mint-ink); }
+.ply-lilac { --ply: var(--ply-lilac); --ply-ink: var(--ply-lilac-ink); }
+.ply-apricot { --ply: var(--ply-apricot); --ply-ink: var(--ply-apricot-ink); }
+.ply-teal { --ply: var(--ply-teal); --ply-ink: var(--ply-teal-ink); }
+.ply-pewter { --ply: var(--ply-pewter); --ply-ink: var(--ply-pewter-ink); }
+
+@layer base {
+  html {
+    background: var(--desk);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100dvh;
+    line-height: 1.5;
+    font-feature-settings: 'kern';
+  }
+  :focus-visible {
+    outline: 2px solid var(--carbon);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--carbon) 22%, transparent);
+  }
+  button,
+  [role='button'],
+  a[href],
+  summary {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   The writing surface
+   --------------------------------------------------------------------------------------- */
+.ss-prose {
+  font-family: var(--font-writing);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--ink);
+  font-optical-sizing: auto;
+  outline: none;
+  min-height: 60vh;
+  padding-bottom: 30vh;
+  overflow-wrap: anywhere;
+}
+.ss-prose > * + * {
+  margin-top: 0.85em;
+}
+.ss-prose .ss-title {
+  font-family: var(--font-writing);
+  font-size: clamp(1.9rem, 1.4rem + 2vw, 2.75rem);
+  line-height: 1.15;
+  font-weight: 640;
+  letter-spacing: -0.012em;
+  margin-bottom: 0.6em;
+}
+.ss-prose h2 {
+  font-size: 1.45rem;
+  line-height: 1.3;
+  font-weight: 620;
+  margin-top: 1.6em;
+}
+.ss-prose h3 {
+  font-size: 1.15rem;
+  line-height: 1.35;
+  font-weight: 640;
+  margin-top: 1.4em;
+}
+.ss-prose a {
+  color: var(--carbon);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+.ss-prose strong {
+  font-weight: 680;
+}
+.ss-prose code {
+  font-family: var(--font-code);
+  font-size: 0.86em;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--ink) 7%, transparent);
+}
+.ss-prose pre {
+  font-family: var(--font-code);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  padding: 0.9rem 1rem;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--ink) 6%, var(--sheet));
+  border: 1px solid var(--rule);
+  overflow-x: auto;
+}
+.ss-prose pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.ss-prose blockquote {
+  border-left: 3px solid var(--rule-strong);
+  padding-left: 1rem;
+  color: var(--graphite);
+  font-style: italic;
+}
+.ss-prose ul,
+.ss-prose ol {
+  padding-left: 1.5rem;
+}
+.ss-prose ul {
+  list-style: disc;
+}
+.ss-prose ol {
+  list-style: decimal;
+}
+.ss-prose li + li {
+  margin-top: 0.25em;
+}
+.ss-prose li > p {
+  margin: 0;
+}
+.ss-prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.2rem;
+}
+.ss-prose ul[data-type='taskList'] li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.ss-prose ul[data-type='taskList'] li > label {
+  flex: none;
+  margin-top: 0.38em;
+}
+.ss-prose ul[data-type='taskList'] li > label input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--carbon);
+}
+.ss-prose ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--graphite);
+  text-decoration: line-through;
+  text-decoration-color: var(--rule-strong);
+}
+.ss-prose hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 2em 0;
+}
+.ss-prose .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--graphite);
+  opacity: 0.7;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Wet ink: blocks with changes the server has not yet confirmed. A carbon rule in the margin
+   that dries (fades) when the acknowledgement arrives. */
+.ss-prose > .ss-wet {
+  position: relative;
+}
+.ss-prose > .ss-wet::after {
+  content: '';
+  position: absolute;
+  left: -1.35rem;
+  top: 0.25em;
+  bottom: 0.25em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--wet);
+  animation: ss-ink-in 160ms ease-out;
+}
+@keyframes ss-ink-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Collaborator carets and selections, coloured by ply. */
+.ss-caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid var(--ply-ink);
+  word-break: normal;
+  pointer-events: none;
+}
+.ss-caret__label {
+  position: absolute;
+  left: -2px;
+  bottom: 100%;
+  padding: 1px 6px 2px;
+  border-radius: 4px 4px 4px 0;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--sheet);
+  background: var(--ply-ink);
+  user-select: none;
+}
+.ss-remote-selection {
+  background: color-mix(in oklab, var(--ply-ink) 22%, transparent);
+}
+
+/* ---------------------------------------------------------------------------------------
+   Registration: copies in and out of register
+   --------------------------------------------------------------------------------------- */
+.ss-plate {
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

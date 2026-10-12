@@ -25,9 +25,14 @@
     "verify": "npm run check:js-only && npm run lint && npm test && npm run build"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
     "concurrently": "10.0.6",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
     "fake-indexeddb": "6.2.5",
     "fast-check": "4.10.2",
+    "globals": "17.13.0",
     "mongodb-memory-server": "11.3.0",
     "supertest": "7.3.1",
     "vitest": "5.0.3"

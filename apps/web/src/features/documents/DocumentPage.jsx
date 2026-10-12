@@ -277,6 +277,10 @@ export function DocumentPage() {
       : []),
   ];
 
+  // The side panel sticks just below the app header and the document bar (plus its toolbar row).
+  const toolbarVisible = ready && canEdit && !version;
+  const stickyTop = toolbarVisible ? 'calc(3.5rem + 6.2rem)' : 'calc(3.5rem + 3.1rem)';
+
   const downloadAction = editor && (
     <Button size="sm" onClick={() => downloadHtml(editor, title)}>
       Download what’s on this device
@@ -335,7 +339,7 @@ export function DocumentPage() {
           />
         </div>
         {/* The editor's formatting toolbar is portalled here so it stays in the sticky bar. */}
-        <div ref={setToolbarTarget} className={ready && canEdit && !version ? 'border-t border-rule/70' : 'hidden'} />
+        <div ref={setToolbarTarget} className={toolbarVisible ? 'border-t border-rule/70' : 'hidden'} />
       </div>
 
       <div className={`grid flex-1 ${wide ? 'grid-cols-[minmax(0,1fr)_20rem]' : ''}`}>
@@ -410,7 +414,7 @@ export function DocumentPage() {
         </div>
 
         {wide && summary && (
-          <aside className="sticky top-[6.5rem] h-[calc(100dvh-6.5rem)] overflow-y-auto border-l border-rule p-5">
+          <aside className="sticky overflow-y-auto border-l border-rule p-5" style={{ top: stickyTop, height: `calc(100dvh - ${stickyTop})` }}>
             {panel === 'history' && ready ? historyPanel(setVersion) : <CopiesPanel summary={summary} state={state} people={people} />}
           </aside>
         )}

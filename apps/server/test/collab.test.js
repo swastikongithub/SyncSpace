@@ -231,7 +231,7 @@ describe('real-time collaboration', () => {
     await waitForDurable(a);
     await waitFor(async () => (await Document.findById(doc.id).lean()).wordCount === 7, { message: 'derived metadata' });
     const stored = await Document.findById(doc.id).lean();
-    expect(stored.excerpt).toBe('Entropy always increases in an isolated system');
+    expect(stored.excerpt).toBe('Entropy always increases in an isolated system.');
     const search = await editor.get('/api/search').query({ q: 'isolated' });
     expect(search.body.results[0]).toMatchObject({ id: doc.id, matchedIn: 'content' });
   });

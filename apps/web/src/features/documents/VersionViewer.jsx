@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { can } from '@syncspace/shared/roles';
 import { VersionPreview } from '../../editor/VersionPreview.jsx';
 import { api, ApiError } from '../../lib/api.js';
@@ -16,6 +16,13 @@ export function VersionViewer({ docId, version, role, online, onClose }) {
   const [error, setError] = useState(null);
   const [confirming, setConfirming] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const heading = useRef(null);
+
+  // Bring the version into view and move focus to it, so keyboard and screen-reader users land there.
+  useEffect(() => {
+    heading.current?.scrollIntoView({ block: 'start' });
+    heading.current?.focus({ preventScroll: true });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +53,7 @@ export function VersionViewer({ docId, version, role, online, onClose }) {
     <section aria-labelledby="version-heading" className="mx-auto mt-3 max-w-[46rem]">
       <div className="flex flex-col gap-3 rounded-t-md border border-b-0 border-carbon/40 bg-carbon-wash px-5 py-4 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
-          <h2 id="version-heading" className="font-bold">
+          <h2 id="version-heading" ref={heading} tabIndex={-1} className="scroll-mt-40 font-bold">
             Earlier version from {shortDateTime(version.createdAt)}
           </h2>
           <p className="text-sm text-graphite">{describeVersion(version)}. Read only.</p>

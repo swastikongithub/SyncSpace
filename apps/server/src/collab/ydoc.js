@@ -68,10 +68,18 @@ export function readDocumentInfo(ydoc) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
   const collapsed = text.replace(/\s+/g, ' ').trim();
+  // The excerpt previews prose: headings are skipped and each block reads as its own sentence.
+  const prose = body
+    .filter((block) => !(block instanceof Y.XmlElement && block.nodeName === 'heading'))
+    .flatMap((block) => inlineText(block).split('\n'))
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .map((line) => (/[.!?:;…)]$/.test(line) ? line : `${line}.`))
+    .join(' ');
   return {
     title,
     text: text.slice(0, CONTENT_TEXT_MAX),
-    excerpt: collapsed.length > EXCERPT_LENGTH ? `${collapsed.slice(0, EXCERPT_LENGTH - 1).trimEnd()}…` : collapsed,
+    excerpt: prose.length > EXCERPT_LENGTH ? `${prose.slice(0, EXCERPT_LENGTH - 1).trimEnd()}…` : prose,
     wordCount: collapsed ? collapsed.split(' ').length : 0,
   };
 }

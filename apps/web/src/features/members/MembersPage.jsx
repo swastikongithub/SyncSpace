@@ -198,6 +198,8 @@ export function MembersPage() {
   }
 
   if (!workspace) return null;
+  const owners = members.data?.filter((member) => member.role === 'owner') ?? [];
+  const soleOwner = role === 'owner' && owners.length === 1;
 
   return (
     <main id="main" className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8 sm:px-8">
@@ -263,9 +265,13 @@ export function MembersPage() {
             );
           })}
         </ul>
-        <Button variant="quiet" className="self-start text-correction" onClick={() => setLeaving(true)}>
-          Leave this workspace…
-        </Button>
+        {soleOwner ? (
+          <p className="text-sm text-graphite">You’re the only owner. Make someone else an owner before you can leave.</p>
+        ) : (
+          <Button variant="danger-outline" size="sm" className="self-start" onClick={() => setLeaving(true)}>
+            Leave this workspace…
+          </Button>
+        )}
       </section>
 
       {manage && invitations.data?.length > 0 && (

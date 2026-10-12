@@ -119,7 +119,7 @@ export function WorkspaceHome() {
             <h1 id="workspace-title" className="font-writing text-[2rem] font-[620] leading-tight tracking-[-0.01em]">
               {workspace.name}
             </h1>
-            <p className="text-graphite">
+            <p className="mt-1 text-graphite">
               {list.length} {list.length === 1 ? 'document' : 'documents'}. You’re {role === 'owner' ? 'an owner' : role === 'editor' ? 'an editor' : 'a viewer'}.
             </p>
           </div>

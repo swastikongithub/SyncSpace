@@ -1,0 +1,37 @@
+# Local development services. Credentials come from `.env` (see `.env.example`).
+#   docker compose up -d mongo     start MongoDB and wait for it with `docker compose ps`
+#   docker compose down            stop (data is kept in the named volume)
+#   docker compose down -v         stop and DELETE local data
+name: syncspace
+
+services:
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?set MONGO_ROOT_USERNAME in .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env}
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:?set MONGO_APP_USERNAME in .env}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?set MONGO_APP_PASSWORD in .env}
+      MONGO_APP_DB: ${MONGO_APP_DB:-syncspace}
+    ports:
+      # Bound to loopback only so the database is not reachable from the local network.
+      - "127.0.0.1:${MONGO_HOST_PORT:-27019}:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./docker/mongo/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Authenticating as the app user proves the init script has run, not just that mongod is up.
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --norc
+          "mongodb://$${MONGO_APP_USERNAME}:$${MONGO_APP_PASSWORD}@127.0.0.1:27017/$${MONGO_APP_DB}?authSource=$${MONGO_APP_DB}"
+          --eval "quit(db.runCommand({ ping: 1 }).ok === 1 ? 0 : 1)"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  mongo-data:

@@ -1,0 +1,27 @@
+{
+  "name": "syncspace",
+  "private": true,
+  "type": "module",
+  "description": "Real-time, offline-first collaborative documents (MERN + Yjs).",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d --wait mongo",
+    "db:down": "docker compose down",
+    "db:check": "npm run db:check -w @syncspace/server",
+    "dev": "concurrently -k -n server,web -c blue,magenta \"npm:dev -w @syncspace/server\" \"npm:dev -w @syncspace/web\"",
+    "build": "npm run build -w @syncspace/web",
+    "start": "npm run start -w @syncspace/server",
+    "seed": "npm run seed -w @syncspace/server",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "check:js-only": "node scripts/check-js-only.js",
+    "verify": "npm run check:js-only && npm run lint && npm test && npm run build"
+  }
+}

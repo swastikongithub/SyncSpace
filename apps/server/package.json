@@ -1,0 +1,30 @@
+{
+  "name": "@syncspace/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch-path=src --watch-path=../../packages/shared/src src/index.js",
+    "start": "node src/index.js",
+    "db:check": "node scripts/db-check.js",
+    "seed": "node scripts/seed.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "2.2.2",
+    "cookie": "2.0.1",
+    "dotenv": "18.0.7",
+    "express": "5.3.0",
+    "express-rate-limit": "8.7.1",
+    "helmet": "8.3.0",
+    "lib0": "0.2.119",
+    "mongoose": "9.11.1",
+    "pino": "10.4.0",
+    "pino-http": "11.0.0",
+    "ws": "8.22.0",
+    "y-protocols": "1.0.7",
+    "yjs": "13.6.33",
+    "zod": "4.6.6"
+  }
+}

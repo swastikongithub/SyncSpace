@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Builds and caches
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Test output
+playwright-report/
+test-results/
+blob-report/
+/e2e/.auth/
+
+# Environment and secrets — only .env.example is tracked
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Measurement scratch output (curated results live in docs/measurements)
+/measurements/raw/

@@ -34,7 +34,8 @@ export function isAllowedOrigin(origin, allowedOrigins) {
   return typeof origin === 'string' && allowedOrigins.includes(origin);
 }
 
-export function securityHeaders({ allowedOrigins, isProduction }) {
+/** `httpsOnly` (the same switch as Secure cookies) enables HSTS and upgrade-insecure-requests. */
+export function securityHeaders({ allowedOrigins, httpsOnly }) {
   const socketOrigins = allowedOrigins.map((origin) => origin.replace(/^http/, 'ws'));
   return helmet({
     contentSecurityPolicy: {
@@ -53,10 +54,10 @@ export function securityHeaders({ allowedOrigins, isProduction }) {
         'object-src': ["'none'"],
         'base-uri': ["'self'"],
         'form-action': ["'self'"],
-        'upgrade-insecure-requests': isProduction ? [] : null,
+        'upgrade-insecure-requests': httpsOnly ? [] : null,
       },
     },
     crossOriginEmbedderPolicy: false,
-    hsts: isProduction ? undefined : false,
+    hsts: httpsOnly ? undefined : false,
   });
 }

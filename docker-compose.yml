@@ -1,7 +1,8 @@
-# Local development services. Credentials come from `.env` (see `.env.example`).
-#   docker compose up -d mongo     start MongoDB and wait for it with `docker compose ps`
-#   docker compose down            stop (data is kept in the named volume)
-#   docker compose down -v         stop and DELETE local data
+# Local services. Credentials come from `.env` (see `.env.example`).
+#   docker compose up -d --wait mongo              MongoDB only (for `npm run dev`)
+#   docker compose --profile app up -d --build     MongoDB + the production app on http://localhost:8088
+#   docker compose down                            stop (data is kept in the named volume)
+#   docker compose down -v                         stop and DELETE local data
 name: syncspace
 
 services:
@@ -32,6 +33,24 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
+
+  app:
+    profiles: ["app"]
+    build: .
+    image: syncspace:local
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://${MONGO_APP_USERNAME}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_APP_DB:-syncspace}?authSource=${MONGO_APP_DB:-syncspace}
+      APP_ORIGINS: http://localhost:${APP_HOST_PORT:-8088}
+      # Plain HTTP on localhost. Behind HTTPS in production, leave this unset (Secure cookies, HSTS).
+      COOKIE_SECURE: "false"
+      LOG_LEVEL: info
+    ports:
+      - "127.0.0.1:${APP_HOST_PORT:-8088}:4000"
 
 volumes:
   mongo-data:

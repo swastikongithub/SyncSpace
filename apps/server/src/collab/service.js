@@ -1,4 +1,5 @@
 import { WebSocketServer } from 'ws';
+import * as Y from 'yjs';
 import { LIMITS } from '@syncspace/shared';
 import { CloseCode, decodeMessage, encodeControl, ProtocolError } from '@syncspace/shared/protocol';
 import { HttpError } from '../http/errors.js';
@@ -20,8 +21,14 @@ export const DEFAULT_COLLAB_SETTINGS = Object.freeze({
 });
 
 function rejectUpgrade(socket, status, text) {
+  socket.once('finish', () => socket.destroy());
   socket.end(`HTTP/1.1 ${status} ${text}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
 }
+
+// After an 'upgrade' event Node no longer handles the raw socket's errors. A client resetting
+// the connection mid-handshake (common while the server restarts) would otherwise surface as an
+// uncaught exception and take the process down.
+function ignoreSocketError() {}
 
 /**
  * Real-time collaboration over WebSockets: one socket per open document, authorised with the
@@ -66,6 +73,11 @@ export function createCollabService({ config, logger, authenticate, sessions, me
     if (entry?.loading) return entry.loading;
     const loading = (async () => {
       const loaded = await store.load(docId);
+      if (shuttingDown) {
+        // A room finishing its load after shutdown must not start serving or writing.
+        loaded.ydoc.destroy();
+        throw new Error('Server is shutting down');
+      }
       return new DocRoom({ docId, workspaceId, ...loaded, store, hooks, metrics, logger: log, settings, onClosed: onRoomClosed });
     })();
     rooms.set(docId, { loading });
@@ -107,6 +119,7 @@ export function createCollabService({ config, logger, authenticate, sessions, me
   // ---- Connections ---------------------------------------------------------------------
 
   function handleUpgrade(req, socket, head) {
+    socket.on('error', ignoreSocketError);
     const path = new URL(req.url ?? '/', 'http://localhost').pathname;
     const match = PATH.exec(path);
     if (!match || shuttingDown) {
@@ -313,6 +326,16 @@ export function createCollabService({ config, logger, authenticate, sessions, me
     await new Promise((resolve) => wss.close(() => resolve()));
   }
 
+  /** Live rooms with their connections and state vectors (diagnostics and tests). */
+  function inspect() {
+    return [...rooms.entries()].map(([docId, entry]) => ({
+      docId,
+      state: entry.unloading ? 'unloading' : entry.loading ? 'loading' : entry.room?.closed ? 'closed' : 'live',
+      users: entry.room ? [...entry.room.conns].map((conn) => conn.userId) : [],
+      stateVector: entry.room && !entry.room.closed ? Object.fromEntries(Y.decodeStateVector(Y.encodeStateVector(entry.room.ydoc))) : null,
+    }));
+  }
+
   function stats() {
     const live = [...rooms.values()].map((entry) => entry.room).filter((room) => room && !room.closed);
     return {
@@ -335,6 +358,7 @@ export function createCollabService({ config, logger, authenticate, sessions, me
     revalidate,
     shutdown,
     stats,
+    inspect,
     settings,
   };
 }

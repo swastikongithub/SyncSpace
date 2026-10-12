@@ -16,11 +16,21 @@ const toBuffer = (bytes) => Buffer.from(bytes.buffer, bytes.byteOffset, bytes.by
 export function createDocStore() {
   return {
     async load(docId) {
-      const checkpoint = await DocCheckpoint.findOne({ docId }).lean();
+      // Reading the checkpoint and then the updates after it is not atomic. If a compaction lands
+      // in between, the updates it folded into a newer checkpoint are already deleted; detect that
+      // by re-reading the checkpoint and retry, so a room never starts from a partial state.
+      let checkpoint;
+      let updates;
+      for (let attempt = 0; ; attempt += 1) {
+        checkpoint = await DocCheckpoint.findOne({ docId }).lean();
+        updates = await DocUpdate.find({ docId, seq: { $gt: checkpoint?.seq ?? 0 } }, { seq: 1, update: 1 })
+          .sort({ seq: 1 })
+          .lean();
+        const recheck = await DocCheckpoint.findOne({ docId }, { seq: 1 }).lean();
+        if ((recheck?.seq ?? 0) === (checkpoint?.seq ?? 0)) break;
+        if (attempt >= 5) throw new Error(`Document ${docId} kept changing while loading`);
+      }
       const checkpointSeq = checkpoint?.seq ?? 0;
-      const updates = await DocUpdate.find({ docId, seq: { $gt: checkpointSeq } }, { seq: 1, update: 1 })
-        .sort({ seq: 1 })
-        .lean();
       const ydoc = new Y.Doc();
       ydoc.transact(() => {
         if (checkpoint) Y.applyUpdate(ydoc, toBytes(checkpoint.state), LOAD_ORIGIN);

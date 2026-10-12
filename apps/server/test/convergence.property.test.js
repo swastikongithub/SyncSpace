@@ -150,9 +150,32 @@ describe('system convergence through the server', () => {
           }
           for (const device of devices) device.network.set(true);
           await Promise.all(devices.map(({ session }) => waitForDurable(session, 'all changes stored')));
-          await waitFor(() => new Set(devices.map(({ session }) => fragmentOf(session.doc).toString())).size === 1, {
-            message: 'replicas to converge',
-          });
+          try {
+            await waitFor(() => new Set(devices.map(({ session }) => fragmentOf(session.doc).toString())).size === 1, {
+              message: 'replicas to converge',
+            });
+          } catch (error) {
+            if (process.env.CONVERGENCE_DEBUG) {
+              console.log('server rooms', JSON.stringify(harness.server.ctx.collab.inspect()));
+              console.log('users', JSON.stringify(users.map((user) => user.user.id)));
+              for (const [index, { session }] of devices.entries()) {
+                const { connection, localVersion, durableVersion, serverSynced } = session.state;
+                console.log(
+                  `device ${index}`,
+                  JSON.stringify({ connection, localVersion, durableVersion, serverSynced }),
+                  'sv',
+                  JSON.stringify([...Y.decodeStateVector(Y.encodeStateVector(session.doc))]),
+                  'pendingStructs',
+                  Boolean(session.doc.store.pendingStructs),
+                  'pendingDs',
+                  Boolean(session.doc.store.pendingDs),
+                  '\n  ',
+                  fragmentOf(session.doc).toString(),
+                );
+              }
+            }
+            throw error;
+          }
 
           await within(10_000, 'final crash restart', harness.restart({ graceful: false }));
           const verifier = openSession(harness, users[0], doc.id);

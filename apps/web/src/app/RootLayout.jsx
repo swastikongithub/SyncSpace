@@ -1,6 +1,7 @@
 import { Navigate, Outlet, ScrollRestoration, useLocation, useRouteError } from 'react-router';
 import { deviceMemory } from '../lib/device-memory.js';
 import { SessionEndedDialog } from '../features/account/SessionEndedDialog.jsx';
+import { LandingPage } from '../features/landing/LandingPage.jsx';
 import { BackgroundSync } from '../sync/BackgroundSync.jsx';
 import { Brand } from '../ui/Brand.jsx';
 import { ButtonLink } from '../ui/Button.jsx';
@@ -58,10 +59,10 @@ export function RequireUser() {
   );
 }
 
+/** `/`: the landing page for visitors; people signed in on this device go to their workspace. */
 export function Home() {
   const auth = useAuth();
-  if (auth.status === 'checking' && !auth.user) return <DeskMessage title="Opening SyncSpace…" />;
-  if (!auth.user || auth.status === 'signed-out') return <Navigate to="/signin" replace />;
+  if (!auth.user || auth.status === 'signed-out') return <LandingPage />;
   const last = deviceMemory.lastWorkspace(auth.user.id);
   return <Navigate to={last ? `/w/${last}` : '/w'} replace />;
 }

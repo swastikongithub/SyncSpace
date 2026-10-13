@@ -177,12 +177,37 @@ function Link({ connected }) {
   );
 }
 
-export default function ReplicaDemo() {
+/**
+ * @param {{ onState?: (state: Record<'laptop' | 'server' | 'phone', { text: string, online: boolean, unsent: number }>) => void }} props
+ *   onState: called with every replica's text and connection whenever any of them changes (the
+ *   landing page's light table draws these copies).
+ */
+export default function ReplicaDemo({ onState }) {
   const network = useMemo(() => createNetwork(), []);
   const [, rerender] = useReducer((n) => n + 1, 0);
   const announce = useAnnounce();
   useEffect(() => network.subscribe(rerender), [network]);
   useEffect(() => () => network.stop(), [network]);
+  useEffect(() => {
+    if (!onState) return undefined;
+    const report = () =>
+      onState(
+        Object.fromEntries(
+          ['laptop', 'server', 'phone'].map((key) => [
+            key,
+            { text: network.docs[key].getText('page').toString(), online: key === 'server' || network.online[key], unsent: network.unsent[key] ?? 0 },
+          ]),
+        ),
+      );
+    report();
+    const docs = Object.values(network.docs);
+    docs.forEach((doc) => doc.on('update', report));
+    const unsubscribe = network.subscribe(report);
+    return () => {
+      docs.forEach((doc) => doc.off('update', report));
+      unsubscribe();
+    };
+  }, [network, onState]);
 
   const device = (key, name, shortName) => {
     const online = network.online[key];

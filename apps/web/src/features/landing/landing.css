@@ -1,0 +1,563 @@
+/* ---------------------------------------------------------------------------------------
+   Landing page. Same tokens as the app (desk, sheet, ink, carbon, plies); the light table is
+   the one place the page spends its boldness. See docs/landing-page-design.md.
+   Selectors are scoped to .ss-* classes so they never compete with the app's utilities.
+   --------------------------------------------------------------------------------------- */
+
+.ss-landing {
+  --landing-header: 4rem;
+  --landing-gutter: 1.25rem;
+  background: var(--desk);
+  color: var(--ink);
+  min-height: 100dvh;
+}
+
+/* ---- Header ------------------------------------------------------------------------- */
+
+.ss-landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--desk);
+  border-bottom: 1px solid var(--rule);
+}
+.ss-landing-bar {
+  max-width: 90rem;
+  height: var(--landing-header);
+  margin: 0 auto;
+  padding: 0 var(--landing-gutter);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.ss-landing-nav {
+  display: none;
+  gap: 1.75rem;
+}
+.ss-landing-nav a,
+.ss-landing-signin,
+.ss-footer-links a {
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.ss-landing-nav a:hover,
+.ss-landing-signin:hover,
+.ss-footer-links a:hover {
+  color: var(--carbon);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ss-landing-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ss-landing-signin {
+  padding: 0.6rem 0.25rem;
+}
+
+/* ---- Story: hero and chapters beside the sticky stage --------------------------------- */
+
+.ss-story {
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 var(--landing-gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ss-hero {
+  padding: 2.75rem 0 2rem;
+}
+.ss-h1 {
+  position: relative;
+  isolation: isolate;
+  margin: 0;
+  font-family: var(--font-writing);
+  font-size: clamp(2.4rem, 1.45rem + 3.6vw, 4.6rem);
+  font-weight: 560;
+  font-variation-settings: 'opsz' 72;
+  line-height: 1.03;
+  letter-spacing: -0.024em;
+}
+/* The headline arrives out of register, its carbon plate offset, and settles into place: the
+   same moment the light table plays. The plate ends exactly under the ink and then fades. */
+.ss-h1-plate {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: var(--carbon);
+  opacity: 0;
+  animation: ss-headline-register 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms both;
+  pointer-events: none;
+  user-select: none;
+}
+@keyframes ss-headline-register {
+  0% {
+    transform: translate(0.07em, -0.05em);
+    opacity: 0.85;
+  }
+  70% {
+    transform: translate(0, 0);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+.ss-lede {
+  max-width: 36rem;
+  margin: 1.5rem 0 0;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--graphite);
+}
+.ss-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 2rem;
+}
+.ss-text-link,
+.ss-how-note a,
+.ss-colophon a {
+  color: var(--carbon);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ss-story-stage {
+  position: sticky;
+  top: var(--landing-header);
+  z-index: 10;
+  height: clamp(14rem, 38svh, 22rem);
+  margin: 0 calc(var(--landing-gutter) * -1);
+  background: var(--desk);
+  border-bottom: 1px solid var(--rule);
+}
+
+.ss-chapter {
+  min-height: 62svh;
+  padding: 3rem 0;
+  scroll-margin-top: calc(var(--landing-header) + clamp(14rem, 38svh, 22rem));
+}
+.ss-chapter > p,
+.ss-band-inner > p {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  font-size: 1.075rem;
+  line-height: 1.65;
+}
+.ss-chapter em {
+  font-style: normal;
+  font-weight: 700;
+}
+.ss-h2 {
+  margin: 0;
+  font-family: var(--font-writing);
+  font-size: clamp(1.75rem, 1.35rem + 1.5vw, 2.6rem);
+  font-weight: 580;
+  font-variation-settings: 'opsz' 48;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.ss-status-sample {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  max-width: 34rem;
+  margin: 1.25rem 0 0;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--sheet);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.ss-status-sample svg {
+  margin-top: 1px;
+}
+.ss-try {
+  min-height: 0;
+  padding-bottom: 4rem;
+}
+.ss-try > p {
+  margin-bottom: 1.5rem;
+}
+.ss-demo-placeholder {
+  height: 34rem;
+  border: 1px dashed var(--rule);
+  border-radius: 10px;
+}
+
+/* ---- The stage ---------------------------------------------------------------------- */
+
+.ss-stage {
+  position: relative;
+  height: 100%;
+  margin: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+.ss-stage-poster,
+.ss-stage-canvas {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  min-height: 0;
+}
+.ss-stage-poster {
+  transition: opacity 500ms ease 120ms;
+}
+.ss-stage-poster.is-covered {
+  opacity: 0;
+}
+.ss-stage-canvas {
+  opacity: 0;
+  transition: opacity 500ms ease;
+  /* The pad's light spills past the canvas; fade the canvas into the desk at every edge. */
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
+    linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  mask-composite: intersect;
+}
+.ss-stage-canvas.is-ready {
+  opacity: 1;
+}
+.ss-stage-caption {
+  grid-row: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.5rem var(--landing-gutter) 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--graphite);
+}
+.ss-stage-caption p {
+  flex: 1 1 18rem;
+  margin: 0;
+  max-width: 44rem;
+}
+/* In the narrow band the chapter text right below says the same; keep the description for
+   screen readers and give the band to the drawing. */
+@media (max-width: 1023px) {
+  .ss-stage-caption p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ss-stage-caption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 0 var(--landing-gutter) 0.6rem;
+  }
+}
+.ss-stage-control,
+.ss-stage-load {
+  flex: none;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.ss-stage-control:hover,
+.ss-stage-load:hover {
+  border-color: var(--carbon);
+  color: var(--carbon);
+}
+.ss-stage-control[aria-pressed='true'] {
+  border-color: var(--carbon);
+  background: var(--carbon-wash);
+  color: var(--carbon);
+}
+.ss-stage-note {
+  grid-row: 2;
+  margin: 0;
+  padding: 0 var(--landing-gutter);
+  font-size: 0.8rem;
+  color: var(--graphite);
+}
+.ss-stage-load {
+  position: absolute;
+  left: var(--landing-gutter);
+  top: 0.75rem;
+}
+
+/* The SVG poster: the same table seen from above, tilted towards the camera's angle. */
+.ss-poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  perspective: 1600px;
+}
+.ss-poster-table {
+  width: auto;
+  height: 80%;
+  max-width: 92%;
+  overflow: visible;
+  transform: rotateX(44deg) rotateZ(-14deg);
+}
+.ss-poster-glass {
+  fill: #fdfcff;
+  stroke: #d3d0dd;
+  stroke-width: 9;
+  filter: drop-shadow(0 0 40px rgb(255 255 255 / 0.5));
+}
+@media (prefers-color-scheme: dark) {
+  .ss-poster-glass {
+    fill: #ebe8f4;
+    stroke: #46415e;
+    filter: drop-shadow(0 0 60px rgb(150 140 200 / 0.35));
+  }
+}
+.ss-poster-sheet {
+  mix-blend-mode: multiply;
+  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 400ms ease;
+}
+
+/* ---- Bands below the story ---------------------------------------------------------- */
+
+.ss-band,
+.ss-devices {
+  padding: clamp(4rem, 9vw, 7rem) var(--landing-gutter);
+  border-top: 1px solid var(--rule);
+}
+.ss-band-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.ss-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 2.25rem 3rem;
+  margin: 2.5rem 0 0;
+}
+.ss-features dt {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.ss-features dd {
+  margin: 0.4rem 0 0;
+  color: var(--graphite);
+  line-height: 1.6;
+}
+
+.ss-devices-lede {
+  color: var(--graphite);
+}
+.ss-devices-proofs {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+.ss-proof {
+  margin: 0;
+}
+.ss-proof img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+.ss-proof figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--graphite);
+}
+.ss-proof-phone {
+  max-width: 17rem;
+}
+.ss-devices-scene {
+  margin-top: 2.5rem;
+}
+.ss-spline-canvas {
+  height: clamp(22rem, 60vh, 38rem);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--desk-raised);
+}
+.ss-spline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+  color: var(--graphite);
+}
+.ss-spline-controls p {
+  margin: 0;
+}
+.ss-spline-credit {
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.ss-steps {
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  gap: 1.5rem;
+  max-width: 44rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+}
+.ss-steps li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.ss-steps li::before {
+  content: counter(step);
+  font-family: var(--font-writing);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--carbon);
+}
+.ss-steps strong {
+  font-weight: 700;
+}
+.ss-how-note {
+  color: var(--graphite);
+}
+
+.ss-start {
+  padding: clamp(3rem, 8vw, 6rem) var(--landing-gutter);
+}
+.ss-start .ss-band-inner {
+  padding: clamp(2rem, 5vw, 4rem);
+  border-radius: 12px;
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+
+.ss-landing-footer {
+  padding: 3rem var(--landing-gutter) 4rem;
+  border-top: 1px solid var(--rule);
+}
+.ss-landing-footer-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+}
+.ss-footer-brand p {
+  margin: 0.5rem 0 0;
+  color: var(--graphite);
+}
+.ss-footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ss-colophon {
+  max-width: 34rem;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--graphite);
+}
+
+/* ---- Wider screens ------------------------------------------------------------------ */
+
+@media (min-width: 720px) {
+  .ss-landing {
+    --landing-gutter: 2rem;
+  }
+  .ss-devices-proofs {
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    align-items: end;
+  }
+  .ss-landing-footer-inner {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.4fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .ss-landing-nav {
+    display: flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ss-story {
+    grid-template-columns: minmax(0, 33rem) minmax(0, 1fr);
+    grid-template-areas:
+      'hero stage'
+      'chapters stage';
+    column-gap: clamp(2rem, 5vw, 5.5rem);
+  }
+  .ss-hero {
+    grid-area: hero;
+    min-height: calc(100svh - var(--landing-header));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem 0 5rem;
+  }
+  .ss-chapters {
+    grid-area: chapters;
+  }
+  .ss-story-stage {
+    grid-area: stage;
+    position: relative;
+    top: auto;
+    height: auto;
+    margin: 0 calc(var(--landing-gutter) * -1) 0 0;
+    background: none;
+    border: 0;
+  }
+  .ss-stage {
+    position: sticky;
+    top: var(--landing-header);
+    height: calc(100svh - var(--landing-header));
+  }
+  .ss-chapter {
+    min-height: 92svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 0;
+    scroll-margin-top: var(--landing-header);
+  }
+  .ss-try {
+    min-height: 0;
+    padding: 6rem 0 7rem;
+  }
+  .ss-stage-note {
+    padding: 0 var(--landing-gutter) 0 0;
+  }
+  .ss-stage-caption {
+    padding: 0.5rem var(--landing-gutter) 1.25rem 0;
+    font-size: 0.92rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-h1-plate {
+    display: none;
+  }
+}

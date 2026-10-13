@@ -20,6 +20,9 @@
   "dependencies": {
     "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
     "@fontsource-variable/literata": "5.3.0",
+    "@react-three/fiber": "9.8.1",
+    "@splinetool/react-spline": "4.1.0",
+    "@splinetool/runtime": "2.0.79",
     "@syncspace/shared": "0.1.0",
     "@syncspace/sync-client": "0.1.0",
     "@tiptap/core": "3.31.4",
@@ -37,6 +40,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "7.18.4",
+    "three": "0.186.1",
     "y-protocols": "1.0.7",
     "yjs": "13.6.33"
   }

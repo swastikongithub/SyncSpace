@@ -6,6 +6,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 const apiTarget = process.env.SYNCSPACE_API ?? 'http://localhost:4000';
 
 export default defineConfig({
+  resolve: {
+    // React Three Fiber imports 'three'; the landing page renders with three's WebGPU build, so
+    // point that import there too instead of bundling the classic WebGLRenderer alongside it.
+    alias: [{ find: /^three$/, replacement: 'three/webgpu' }],
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -26,6 +31,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg}', 'assets/*-latin-*.woff2', 'assets/*-latin-ext-*.woff2'],
+        // The landing page's 3D table (about 360 KB gzip) is not part of the offline app shell: it
+        // downloads only when a visitor reaches the landing page, and is cached from then on.
+        globIgnores: ['**/LightTable-*.js', '**/SplineDesk-*.js'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/ws\//],
         cleanupOutdatedCaches: true,
@@ -34,6 +42,11 @@ export default defineConfig({
             urlPattern: ({ url }) => url.pathname.startsWith('/assets/') && url.pathname.endsWith('.woff2'),
             handler: 'CacheFirst',
             options: { cacheName: 'syncspace-fonts', expiration: { maxEntries: 40 } },
+          },
+          {
+            urlPattern: ({ url }) => /^\/assets\/(LightTable|SplineDesk)-[\w-]+\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'syncspace-landing-3d', expiration: { maxEntries: 4 } },
           },
         ],
       },

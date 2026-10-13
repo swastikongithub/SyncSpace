@@ -1,6 +1,6 @@
 # ADR 0005: Advanced graphics (Three.js, React Three Fiber, WebGPU, Spline)
 
-- Status: accepted
+- Status: accepted; amended for the public landing page by [ADR 0007](0007-landing-page-graphics.md) (the app itself is unchanged)
 - Date: 2026-10-12
 
 ## Context

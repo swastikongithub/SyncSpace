@@ -120,7 +120,9 @@ Measured with the WCAG 2.x relative-luminance formula (script in the development
 
 ## 8. Advanced graphics: Three.js, React Three Fiber, WebGPU, Spline
 
-See [ADR 0005](adr/0005-advanced-graphics.md) for the measured evaluation. Summary: the concept *is* spatial (layered sheets), but every spatial element SyncSpace needs is a handful of offset planes carrying real, selectable, screen-reader-visible text. CSS 3D transforms and SVG do that at zero bundle cost. A measured R3F prototype of the same scene cost +233 KB gzip (WebGL) or +422 KB gzip (WebGPU) for no user-visible gain, so none of the four technologies ships in the product.
+See [ADR 0005](adr/0005-advanced-graphics.md) for the measured evaluation. Summary: the concept *is* spatial (layered sheets), but every spatial element SyncSpace needs is a handful of offset planes carrying real, selectable, screen-reader-visible text. CSS 3D transforms and SVG do that at zero bundle cost. A measured R3F prototype of the same scene cost +233 KB gzip (WebGL) or +422 KB gzip (WebGPU) for no user-visible gain, so none of the four technologies ships in the product's screens.
+
+The public landing page is the exception ([ADR 0007](adr/0007-landing-page-graphics.md)): its "light table" uses Three.js, React Three Fiber and WebGPU to show copies diverging and merging, lazy-loaded and kept out of the app. Its direction and reasoning are in [landing-page-design.md](landing-page-design.md).
 
 ## 9. Design reviews
 

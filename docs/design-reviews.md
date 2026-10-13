@@ -33,3 +33,34 @@ Reviews of the built interface, from screenshots captured with Playwright (deskt
 - Keyboard: dialogs use native `<dialog>` (focus trap, Escape), menus support arrow keys, Home/End and Escape, and every icon-only control has an accessible name.
 - Target sizes: toolbar buttons are 40 px, quiet buttons 36 px. That meets WCAG 2.2 AA (24 px); the AAA 44 px level is not met for toolbar buttons.
 - Phone: no horizontal page scrolling on any tested screen (asserted in e2e/mobile.spec.js).
+
+## Review 2: the landing page (2026-10-14)
+
+**Method:** Playwright screenshots of every chapter at 1440×900 and on a Pixel 7, in light and dark schemes, on three renderers: WebGPU (Chromium with an NVIDIA adapter), the WebGL 2 fallback (headless Chromium) and the SVG poster (3D APIs removed). Close-ups were taken at 2× to judge the halftone and moiré. Reviewed against [landing-page-design.md](landing-page-design.md) with the `design:design-critique` framework, plus axe in the e2e suite.
+
+### What works
+
+- **The idea reads without the text.** In register, four tinted plies print as one page with crisp registration targets. Out of register, your copy's rows and targets visibly double, and moiré appears where its screen crosses the others.
+- **The demo and the stage agree.** Typing offline in the live Yjs demo lifts the laptop's sheet and wets exactly the rows the server lacks; reconnecting brings every copy back into register (176 identical characters in all three replicas in the test run).
+- **Dark mode turns the pad into a lamp:** the glass glows and its light spills onto the desk.
+
+### Findings and changes
+
+| # | Finding | Severity | Change |
+|---|---|---|---|
+| 1 | With a thick dark frame, the light table read as a tablet screen | Moderate | Thin aluminium bezel, visible slab thickness, and the pad's light spilling onto the desk |
+| 2 | The pad's light ended in a hard rectangle at the canvas edge | Moderate | The canvas fades into the desk at every edge (CSS mask) |
+| 3 | In register, four multiplied inks made the text rows heavy black bars, and the tint screens muddied the sheets | Moderate | Smaller dots (radius 0.38 of a cell), lighter tint screens, a softer ink for the server's film |
+| 4 | History's version proofs floated above the pad and vanished against the dark desk | Moderate | Earlier versions slide out beside the current copy as smaller proofs on the glass |
+| 5 | The first droplet spray was a dense smear | Minor | Smaller, translucent droplets that spread wider, arc between sheets and split into two plumes for the two receiving copies |
+| 6 | "How a keystroke becomes stored" put each word of a step on its own line | Critical | Each step's text is one block beside its number |
+| 7 | On phones the stage band was two-fifths of the screen with a three-line caption | Moderate | Tighter framing on the sheets, a shorter band, and the caption kept for screen readers (the chapter text below repeats it) |
+| 8 | The SVG fallback's table was oversized, with a heavy frame, and its note overlapped the caption | Minor | Pad proportions and bezel match the 3D one; the note has its own row |
+| 9 | With a Spline scene, the devices section still called it "screenshots" | Minor | The sentence appears only when screenshots are shown |
+
+### Accessibility checks
+
+- axe (WCAG 2.2 AA tags) on the landing page: **no serious or critical violations** (e2e/landing.spec.js).
+- No horizontal overflow at 320, 360 and 412 px wide (e2e/landing-mobile.spec.js).
+- Reduced motion: no headline animation, no opening sequence, state changes drawn in at most a few frames (asserted).
+- Every stage interaction has an HTML equivalent; the canvas is hidden from assistive technology, and its figure caption describes what it shows.

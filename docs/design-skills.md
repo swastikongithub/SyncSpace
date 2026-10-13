@@ -44,3 +44,6 @@ Flags: `-a claude-code -y` makes the `skills` CLI non-interactive (it otherwise 
 | Rules floor | UI/UX Pro Max | Targeted `--domain ux` queries (status messages, form errors, focus, reduced motion); `--stack react` / `html-tailwind` for implementation |
 | Copy | design:ux-copy | Sync-status vocabulary, offline and error messages, empty states |
 | Verification | design:design-critique, design:accessibility-review | Screenshot reviews of the key screens; findings and fixes logged in `docs/design.md` |
+| Landing page (2026-10-14) | frontend-design | Five directions compared, token plan and ASCII layouts, then a pass against generic defaults (sticky scrollytelling, serif hero, card grids, mockup frames); recorded in `docs/landing-page-design.md` |
+| Landing page | UI/UX Pro Max | `--stack threejs` and `--domain ux` rules applied: live `prefers-reduced-motion` listener, an accessible description for the canvas, antialias set at construction, no scroll-jacking, at most one or two animated elements per view |
+| Landing page | design:design-critique, design:accessibility-review | Screenshot reviews at desktop and phone sizes, light and dark, WebGPU, WebGL 2 and the SVG fallback; findings in `docs/design-reviews.md` (Review 2); axe in the e2e suite |

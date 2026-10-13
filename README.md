@@ -10,6 +10,12 @@ SyncSpace is an offline-first collaborative workspace for creating and editing d
 |---|---|---|
 | ![Offline editing with wet-ink marks and an exact unsent count](docs/screenshots/editor-offline.png) | ![Editing on a phone](docs/screenshots/phone-editor.png) | ![A stored version previewed read-only](docs/screenshots/history-preview.png) |
 
+The landing page at `/` explains the idea on a **light table**: each copy of a document is a translucent sheet printed with a halftone screen. A copy that goes offline lifts out of register, and its screen beats against the others as moiré; on reconnect its ink travels to the server and back into the other copies. It is drawn with Three.js and React Three Fiber on WebGPU, falling back to WebGL 2 and then to an SVG drawing ([design and technology](docs/landing-page-design.md)).
+
+| The offline chapter (WebGPU) | Dark mode |
+|---|---|
+| ![Landing page: your copy lifted out of register, its new paragraph in wet violet ink, beside the text "Lose the connection. Keep the sentence."](docs/screenshots/landing-offline.png) | ![Landing page in dark mode: the light pad glowing on a dark desk beside the headline](docs/screenshots/landing-dark.png) |
+
 ## Contents
 
 - [What it does](#what-it-does)
@@ -43,6 +49,7 @@ SyncSpace is an offline-first collaborative workspace for creating and editing d
 - **Nothing silently lost:** if a collaborator deleted a paragraph you edited offline, your pre-merge copy is saved to History and you are told.
 - **Search** across your workspaces (titles and text, scoped to your memberships). Offline, it searches the titles of documents on the device.
 - **Activity:** a short feed of meaningful events (joins, new documents, edit sessions, restores).
+- **Landing page:** at `/` for visitors without a session (signed-in people go straight to their workspace). A story told beside a 3D light table, a live Yjs demo that drives it, the app's features, how storage works, and calls to action. See [docs/landing-page-design.md](docs/landing-page-design.md).
 
 ## Quick start
 
@@ -92,7 +99,8 @@ The image serves the API, the WebSocket endpoint and the built web app on one po
 | `npm run build` | Production build of the web app |
 | `npm run verify` | JS-only check, lint, tests and build |
 | `npm run db:up` / `npm run db:down` | Start or stop the MongoDB container |
-| `node scripts/measure-sync.js` | Reproduces the measurements below |
+| `node scripts/measure-sync.js` | Reproduces the sync measurements below |
+| `node scripts/measure-landing.js` | Reproduces the landing-page load measurements (needs `npm run build` first) |
 
 ## Environment variables
 
@@ -117,6 +125,8 @@ All are read by the backend (`apps/server/src/config.js`, validated at startup).
 | `MONGO_APP_USERNAME`, `MONGO_APP_PASSWORD`, `MONGO_APP_DB` | change-me | Compose: the backend's least-privilege account |
 | `MONGO_HOST_PORT`, `APP_HOST_PORT` | `27019`, `8088` | Compose: host ports (chosen to avoid a local mongod and common dev ports) |
 | `SEED_PASSWORD` | `syncspace-demo-2026` | Password for the seeded demo accounts |
+| `SPLINE_ORIGINS` | unset | Https origins a published Spline scene loads from (landing page). Unset: the CSP allows none. |
+| `VITE_SPLINE_SCENE_URL` | unset | **Build time** (web app): the Spline scene's `.splinecode` URL. Unset: no Spline code is built. Docker: `--build-arg`. |
 
 ## Architecture
 
@@ -165,6 +175,7 @@ Presence is never stored. Decision records:
 - [0004 offline storage](docs/adr/0004-offline-storage.md)
 - [0005 advanced graphics](docs/adr/0005-advanced-graphics.md)
 - [0006 authentication](docs/adr/0006-authentication.md)
+- [0007 3D graphics on the landing page](docs/adr/0007-landing-page-graphics.md)
 
 ## How synchronisation works
 
@@ -198,16 +209,17 @@ The visual identity was derived from the product's core idea: every replica is a
 - [docs/design.md](docs/design.md): concepts compared, tokens with measured contrast, layouts, and a review of the plan against generic defaults
 - [docs/design-reviews.md](docs/design-reviews.md): screenshot reviews of the built app and what changed
 - [docs/design-skills.md](docs/design-skills.md): how the design plugins and skills were installed and used
-- [ADR 0005](docs/adr/0005-advanced-graphics.md): Three.js, React Three Fiber, WebGPU and Spline were evaluated with a measured prototype. R3F would add 233 KB gzip (WebGL) or 422 KB gzip (WebGPU) for no user-visible gain, so the spatial ideas are built with CSS 3D transforms and SVG over real, selectable text.
+- [ADR 0005](docs/adr/0005-advanced-graphics.md): Three.js, React Three Fiber, WebGPU and Spline were evaluated with a measured prototype. R3F would add 233 KB gzip (WebGL) or 422 KB gzip (WebGPU) for no user-visible gain, so the app's spatial ideas are built with CSS 3D transforms and SVG over real, selectable text.
+- [docs/landing-page-design.md](docs/landing-page-design.md) and [ADR 0007](docs/adr/0007-landing-page-graphics.md): the landing page is the exception. Its light table uses Three.js, React Three Fiber and WebGPU (TSL materials and a compute-shader droplet simulation), lazy-loaded and kept out of the app. The page includes a Spline integration that is ready but has no original scene yet: authoring needs a signed-in Spline account (the remaining step is described there).
 
 ## Testing
 
 | Suite | Count | Runs against |
 |---|---|---|
-| Server: auth, rate limits, permissions, documents, collaboration, offline, history, convergence | 75 tests in 8 files | Real HTTP + WebSocket server, real MongoDB (in-memory or `TEST_MONGODB_URI`), the real sync engine |
-| Web: sync status wording, editor schema round-trips, link sanitising | 17 | Node |
+| Server: auth, rate limits, permissions, documents, collaboration, offline, history, convergence, CSP, precompressed static delivery | 84 tests in 10 files | Real HTTP + WebSocket server, real MongoDB (in-memory or `TEST_MONGODB_URI`), the real sync engine |
+| Web: sync status wording, editor schema round-trips, link sanitising, landing-page choreography and animation | 42 | Node |
 | Shared: protocol framing and roles | 7 | Node |
-| End-to-end (Playwright, Chromium desktop and Pixel 7) | 6 | Production build served by the API, service worker active |
+| End-to-end (Playwright, Chromium desktop and Pixel 7) | 15 | Production build served by the API, service worker active |
 
 Highlights:
 
@@ -227,6 +239,13 @@ Highlights:
   - The app reloads offline from the service worker.
   - Signing out offline keeps unsent work, which is sent in the background after the next sign-in.
   - Access control, an axe audit (no serious or critical WCAG 2.2 AA violations on six screens), and the phone layout.
+  - The landing page:
+    - calls to action, and the redirect for signed-in people;
+    - the 3D stage renders (WebGPU, or WebGL 2 on the GPU-less CI runner);
+    - it follows the story, and draws no frames when idle or off screen;
+    - the live demo merges and drives the stage;
+    - the SVG fallback when no 3D API exists;
+    - reduced motion, axe, and no overflow at 320–412 px.
 
 GitHub Actions ([ci.yml](.github/workflows/ci.yml)) runs the JS-only check, lint, all suites against a `mongo:8.0` service container, the production build, the Playwright suite and the Docker build on every push.
 
@@ -244,7 +263,24 @@ Measured with [`scripts/measure-sync.js`](scripts/measure-sync.js) on 2026-10-12
 
 Reconnect catch-up after missing 200 remote edits while holding 20 offline edits took 18–52 ms until converged and stored.
 
-**Web bundle** (production build): first load is about 154 KB of gzipped JavaScript; the editor route lazy-loads a further 149 KB; CSS is 9 KB. The service worker precaches 1.4 MB (app shell and Latin fonts) for offline use. The production Docker image is 301 MB.
+**Web bundle** (production build):
+
+- First load is about 160 KB of gzipped JavaScript, about 7 KB of it the landing page's HTML and choreography.
+- The editor route lazy-loads a further 148 KB, and CSS is 11 KB.
+- The landing page's 3D code is a separate lazy chunk: about 360 KB gzip, 281 KiB as Brotli on the wire. It is not part of the offline shell.
+- The service worker precaches 1.4 MB (app shell and Latin fonts) for offline use.
+- The server sends precompressed Brotli or gzip copies of the build.
+- The production Docker image measured 301 MB before the landing page was added.
+
+**Landing page** ([`scripts/measure-landing.js`](scripts/measure-landing.js), 2026-10-14). Cold loads of the production build through the real server over loopback, on Chromium 156 with WebGPU, three runs each (medians):
+
+| | First contentful paint | First 3D frame | Transferred |
+|---|---|---|---|
+| Desktop, unthrottled | 180 ms | 938 ms | 587 KiB |
+| Desktop, slow 4G + 4× CPU slowdown | 1.72 s | 4.79 s | 587 KiB |
+| Pixel 7 emulation, slow 4G + 4× CPU slowdown | 1.81 s | 5.12 s | 587 KiB |
+
+These are emulated network and CPU conditions on a fast machine; no physical phone was measured. Details are in [docs/landing-page-design.md](docs/landing-page-design.md#6-loading-fallbacks-and-performance).
 
 No user counts or production traffic figures exist: SyncSpace has not been publicly deployed (see below).
 
@@ -276,7 +312,11 @@ The Docker image runs anywhere containers run, for example Render, Fly.io, Railw
 - **Local data is not encrypted at rest.** On shared computers, choose "Erase my offline copies" when signing out.
 - **Dark mode follows the system setting.** There is no in-app toggle.
 - **Intermittent test failure.** Before the shutdown and load hardening in commit `3ff3bb1`, the randomised whole-system convergence test failed 3 times in about 26 loaded suite runs. In each case every replica reported its edits stored, but one author's items were missing from the others. It has not reproduced in 55 full-suite runs since. The root cause was not confirmed; the test now prints room and replica diagnostics if it recurs.
-- Measurements are loopback only; no WAN or mobile-network figures exist yet.
+- Measurements are loopback only; no WAN or mobile-network figures exist yet. The landing-page figures use emulated slow-4G throttling, not a real network.
+- **Landing page:**
+  - The Spline section has no original scene yet. It shows real screenshots until a scene URL is configured.
+  - The page is client-rendered (no prerendering).
+  - It was verified in Chromium only (WebGPU, WebGL 2 and the SVG fallback), not in Firefox, Safari or on physical phones.
 
 ## Project structure
 

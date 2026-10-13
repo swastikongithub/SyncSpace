@@ -11,19 +11,25 @@ async function expectRenderer(page) {
 
 const frames = (page) => stage(page).evaluate((element) => Number(element.dataset.frames ?? 0));
 
-/** The frame count stops changing: nothing is animating, so nothing is drawn. */
-async function expectSettled(page) {
-  await expect
-    .poll(
-      async () => {
-        const before = await frames(page);
-        await page.waitForTimeout(700);
-        return (await frames(page)) - before;
-      },
-      { timeout: 20_000, intervals: [100] },
-    )
-    .toBe(0);
+/**
+ * The frame count stops changing: nothing is animating, so nothing is drawn. Pages opened with
+ * ?stage-debug record why the last frame was drawn; a failure reports it.
+ */
+async function expectSettled(page, timeout = 40_000) {
+  const deadline = Date.now() + timeout;
+  let delta;
+  do {
+    const before = await frames(page);
+    await page.waitForTimeout(700);
+    delta = (await frames(page)) - before;
+    if (delta === 0) return;
+  } while (Date.now() < deadline);
+  const debug = await stage(page).getAttribute('data-debug');
+  throw new Error(`The stage kept drawing (${delta} frames in 700 ms). Last frame: ${debug}`);
 }
+
+// Software rendering (SwiftShader on CI runners without a GPU) makes the 3D tests slow.
+const SLOW = 150_000;
 
 test('visitors get the landing page at /, with working calls to action', async ({ page }) => {
   await page.goto('/');
@@ -50,7 +56,8 @@ test('people signed in on this device still go straight to their workspaces', as
 });
 
 test('the light table renders, follows the story, and draws nothing while idle or off screen', async ({ page }) => {
-  await page.goto('/');
+  test.setTimeout(SLOW);
+  await page.goto('/?stage-debug');
   await expectRenderer(page);
   await expect(page.locator('.ss-stage-canvas canvas')).toBeVisible();
   await expectSettled(page);
@@ -78,7 +85,8 @@ test('the light table renders, follows the story, and draws nothing while idle o
 });
 
 test('the demo’s copies merge, and the stage draws them', async ({ page }) => {
-  await page.goto('/#try');
+  test.setTimeout(SLOW);
+  await page.goto('/?stage-debug#try');
   await expectRenderer(page);
   await expect(page.locator('.ss-stage-caption')).toContainText('The demo’s three copies');
 
@@ -128,7 +136,8 @@ test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('the headline does not animate and the table jumps straight to each state', async ({ page }) => {
-    await page.goto('/');
+    test.setTimeout(SLOW);
+    await page.goto('/?stage-debug');
     await expect(page.locator('.ss-h1-plate')).toBeHidden();
     await expectRenderer(page);
     await expectSettled(page);

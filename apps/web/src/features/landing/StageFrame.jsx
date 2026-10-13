@@ -26,7 +26,10 @@ function webgl2Available() {
   }
 }
 
-/** The tier this visit should start with. `?stage=poster` and `?renderer=webgl` exist for comparison and testing. */
+/**
+ * The tier this visit should start with. `?stage=poster` and `?renderer=webgl` exist for
+ * comparison and testing, as does `?stage-debug` (see onFrame).
+ */
 function initialTier() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('stage') === 'poster') return { tier: 'poster', reason: 'requested' };
@@ -140,9 +143,12 @@ export function StageFrame({ store, label, children }) {
     [fallBack],
   );
 
-  const onFrame = useCallback(() => {
+  const onFrame = useCallback((diagnosis) => {
     frames.current += 1;
-    if (frameRef.current) frameRef.current.dataset.frames = String(frames.current);
+    if (!frameRef.current) return;
+    frameRef.current.dataset.frames = String(frames.current);
+    // ?stage-debug: why frames are being drawn (used by the end-to-end tests' failure messages).
+    if (diagnosis) frameRef.current.dataset.debug = JSON.stringify(diagnosis);
   }, []);
 
   const small = typeof window !== 'undefined' && window.innerWidth < 640;

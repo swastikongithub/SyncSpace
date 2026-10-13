@@ -137,7 +137,9 @@ export class LightTableEngine {
 
   /** Advances one frame. Returns true while another frame is needed. */
   frame(camera, size, delta) {
-    const dt = Math.min(delta, 1 / 30);
+    // The springs are stable at any step, so animations keep real time even at a few frames per
+    // second; the droplets' explicit integration takes smaller steps (they land on time regardless).
+    const dt = Math.min(delta, 0.1);
     const t = now();
     const moving = this.animator.step(dt, t);
     this.table.update(this.animator, { pitch: this.pitch });
@@ -154,7 +156,7 @@ export class LightTableEngine {
         const u = this.droplets.uniforms;
         const sheets = this.table.sheets;
         u.time.value = elapsed;
-        u.dt.value = dt;
+        u.dt.value = Math.min(dt, 1 / 30);
         u.source.value.copy(sheets[this.flow.source].mesh.matrixWorld);
         u.server.value.copy(sheets.key.mesh.matrixWorld);
         u.copyA.value.copy(sheets[this.flow.copies[0]].mesh.matrixWorld);
@@ -164,7 +166,25 @@ export class LightTableEngine {
       }
     }
     this.droplets.sprite.visible = flowing;
+    this.lastFrame = { dt, moving, cameraMoving, flowing };
     return moving || cameraMoving || flowing;
+  }
+
+  /** For ?stage-debug: what the last frame saw, and which values are still moving. */
+  diagnose(size) {
+    const unsettled = [];
+    const check = (name, c) => {
+      if (c.pending || Math.abs(c.target - c.value) > 0.0005 || Math.abs(c.velocity) > 0.0005) {
+        unsettled.push(`${name} ${c.value.toFixed(4)}>${c.target}${c.pending ? ' (pending)' : ''}`);
+      }
+    };
+    for (const [id, sheet] of Object.entries(this.animator.sheets)) {
+      check(`${id}.visible`, sheet.visible);
+      for (const [field, c] of Object.entries(sheet.transform)) check(`${id}.${field}`, c);
+      sheet.rows.forEach((row, index) => ['present', 'length', 'wet', 'gap', 'heading'].forEach((field) => check(`${id}.r${index}.${field}`, row[field])));
+    }
+    for (const [field, c] of Object.entries(this.rig.channels)) check(`camera.${field}`, c);
+    return { ...this.lastFrame, size: `${size.width}x${size.height}`, flow: Boolean(this.flow), unsettled: unsettled.slice(0, 5), count: unsettled.length };
   }
 
   dispose() {

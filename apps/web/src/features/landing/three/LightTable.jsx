@@ -16,6 +16,8 @@ function readColours() {
     : { surround, spill: '#f6f5fb', spillStrength: 0.6, glow: '#fdfcff', grid: '#dedaeb', bezel: '#d3d0dd', metal: '#aaa6b9' };
 }
 
+const debug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('stage-debug');
+
 function TableScene({ store, activeRef, motionRef, onFrame, pitch, framing }) {
   const invalidate = useThree((state) => state.invalidate);
   const camera = useThree((state) => state.camera);
@@ -108,7 +110,7 @@ function TableScene({ store, activeRef, motionRef, onFrame, pitch, framing }) {
 
   useFrame((_, delta) => {
     const more = engine.frame(camera, size, delta);
-    onFrame?.();
+    onFrame?.(debug ? engine.diagnose(size) : null);
     if (more && activeRef.current) invalidate();
   });
 

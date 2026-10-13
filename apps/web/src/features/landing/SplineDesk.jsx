@@ -11,6 +11,7 @@ export default function SplineDesk({ scene }) {
   const frame = useRef(null);
   const [ready, setReady] = useState(false);
   const [phoneOffline, setPhoneOffline] = useState(false);
+  const emittedAt = useRef(0);
 
   // Pause the scene's rendering while it is off screen.
   useEffect(() => {
@@ -29,11 +30,15 @@ export default function SplineDesk({ scene }) {
   }, []);
 
   const onSplineMouseDown = useCallback((event) => {
-    if (event.target?.name === 'Phone') setPhoneOffline((offline) => !offline);
+    // A click on the phone in the scene. (An event the button just emitted is already counted.)
+    if (event.target?.name !== 'Phone' || performance.now() - emittedAt.current < 150) return;
+    setPhoneOffline((offline) => !offline);
   }, []);
 
   const togglePhone = () => {
     // Plays the transition authored on the Phone object, exactly as a click on it would.
+    emittedAt.current = performance.now();
+    setPhoneOffline((offline) => !offline);
     app.current?.emitEvent('mouseDown', 'Phone');
   };
 

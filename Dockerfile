@@ -13,6 +13,9 @@ COPY packages/sync-client/package.json packages/sync-client/
 RUN npm ci --no-audit --no-fund
 COPY packages packages
 COPY apps/web apps/web
+# Optional: an original Spline scene for the landing page (docs/landing-page-design.md).
+ARG VITE_SPLINE_SCENE_URL=
+ENV VITE_SPLINE_SCENE_URL=$VITE_SPLINE_SCENE_URL
 RUN npm run build -w @syncspace/web
 
 FROM node:22-alpine AS runtime

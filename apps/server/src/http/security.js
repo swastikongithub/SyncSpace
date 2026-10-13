@@ -34,20 +34,26 @@ export function isAllowedOrigin(origin, allowedOrigins) {
   return typeof origin === 'string' && allowedOrigins.includes(origin);
 }
 
-/** `httpsOnly` (the same switch as Secure cookies) enables HSTS and upgrade-insecure-requests. */
-export function securityHeaders({ allowedOrigins, httpsOnly }) {
+/**
+ * `httpsOnly` (the same switch as Secure cookies) enables HSTS and upgrade-insecure-requests.
+ * `splineOrigins` (SPLINE_ORIGINS) lets the landing page's Spline scene fetch its scene file,
+ * textures, fonts and WebAssembly from those hosts and compile the WebAssembly. Without it the
+ * policy is unchanged: everything from this origin only, and no WebAssembly compilation.
+ */
+export function securityHeaders({ allowedOrigins, httpsOnly, splineOrigins = [] }) {
   const socketOrigins = allowedOrigins.map((origin) => origin.replace(/^http/, 'ws'));
+  const spline = splineOrigins.length > 0;
   return helmet({
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
         'default-src': ["'self'"],
-        'script-src': ["'self'"],
+        'script-src': ["'self'", ...(spline ? ["'wasm-unsafe-eval'"] : [])],
         // ProseMirror and React write inline style attributes; no inline scripts are permitted.
         'style-src': ["'self'", "'unsafe-inline'"],
-        'img-src': ["'self'", 'data:', 'blob:'],
-        'font-src': ["'self'"],
-        'connect-src': ["'self'", ...socketOrigins],
+        'img-src': ["'self'", 'data:', 'blob:', ...splineOrigins],
+        'font-src': ["'self'", ...splineOrigins],
+        'connect-src': ["'self'", ...socketOrigins, ...splineOrigins],
         'worker-src': ["'self'"],
         'manifest-src': ["'self'"],
         'frame-ancestors': ["'none'"],

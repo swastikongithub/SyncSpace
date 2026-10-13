@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -9,7 +10,7 @@ export default defineConfig({
   resolve: {
     // React Three Fiber imports 'three'; the landing page renders with three's WebGPU build, so
     // point that import there too instead of bundling the classic WebGLRenderer alongside it.
-    alias: [{ find: /^three$/, replacement: 'three/webgpu' }],
+    alias: [{ find: /^three$/, replacement: fileURLToPath(new URL('./src/features/landing/three/three-for-r3f.js', import.meta.url)) }],
   },
   plugins: [
     react(),
@@ -31,9 +32,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg}', 'assets/*-latin-*.woff2', 'assets/*-latin-ext-*.woff2'],
-        // The landing page's 3D table (about 360 KB gzip) is not part of the offline app shell: it
-        // downloads only when a visitor reaches the landing page, and is cached from then on.
-        globIgnores: ['**/LightTable-*.js', '**/SplineDesk-*.js'],
+        // The landing page's 3D code (assets/3d, see build below) is not part of the offline app
+        // shell: it downloads only when a visitor reaches the landing page, then stays cached.
+        globIgnores: ['assets/3d/**'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/ws\//],
         cleanupOutdatedCaches: true,
@@ -44,9 +45,9 @@ export default defineConfig({
             options: { cacheName: 'syncspace-fonts', expiration: { maxEntries: 40 } },
           },
           {
-            urlPattern: ({ url }) => /^\/assets\/(LightTable|SplineDesk)-[\w-]+\.js$/.test(url.pathname),
+            urlPattern: ({ url }) => url.pathname.startsWith('/assets/3d/'),
             handler: 'CacheFirst',
-            options: { cacheName: 'syncspace-landing-3d', expiration: { maxEntries: 4 } },
+            options: { cacheName: 'syncspace-landing-3d', expiration: { maxEntries: 60 } },
           },
         ],
       },
@@ -94,6 +95,16 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
+    rolldownOptions: {
+      output: {
+        // Chunks of the landing page's 3D code (three.js, React Three Fiber, the light table, Spline)
+        // go to assets/3d, which the service worker leaves out of its precache.
+        chunkFileNames: (chunk) =>
+          chunk.moduleIds.some((id) => /[\\/](three|@react-three|@splinetool)[\\/]|[\\/]features[\\/]landing[\\/](three|SplineDesk)/.test(id))
+            ? 'assets/3d/[name]-[hash].js'
+            : 'assets/[name]-[hash].js',
+      },
+    },
   },
   test: {
     environment: 'node',

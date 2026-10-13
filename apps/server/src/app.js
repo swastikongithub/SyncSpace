@@ -27,7 +27,7 @@ export function createApp(ctx) {
       },
     }),
   );
-  app.use(securityHeaders({ allowedOrigins: config.allowedOrigins, httpsOnly: config.session.cookieSecure }));
+  app.use(securityHeaders({ allowedOrigins: config.allowedOrigins, httpsOnly: config.session.cookieSecure, splineOrigins: config.splineOrigins }));
 
   const api = express.Router();
   api.use((req, res, next) => {

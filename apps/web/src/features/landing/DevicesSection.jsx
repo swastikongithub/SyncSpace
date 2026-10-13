@@ -84,8 +84,8 @@ export function DevicesSection() {
           The same page on a laptop and a phone.
         </h2>
         <p className="ss-devices-lede">
-          SyncSpace runs in the browser on both, and keeps working when either one drops off the network. These are screenshots of
-          the app as it is today.
+          SyncSpace runs in the browser on both, and keeps working when either one drops off the network.
+          {SPLINE_SCENE_URL ? '' : ' These are screenshots of the app as it is today.'}
         </p>
         {SPLINE_SCENE_URL ? <SplineSlot /> : <Screenshots />}
       </div>

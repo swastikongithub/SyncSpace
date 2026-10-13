@@ -34,6 +34,12 @@ const schema = z.object({
   SERVE_WEB: booleanish.optional(),
   RATE_LIMIT_LOGIN: z.coerce.number().int().positive().default(10),
   RATE_LIMIT_REGISTER: z.coerce.number().int().positive().default(20),
+  // HTTPS origins a published Spline scene loads from (landing page). Empty: none allowed.
+  SPLINE_ORIGINS: z
+    .string()
+    .optional()
+    .transform((value) => (value ?? '').split(',').map((origin) => origin.trim()).filter(Boolean))
+    .pipe(z.array(z.string().regex(/^https:\/\/[a-z0-9.-]+(:\d+)?$/i, 'SPLINE_ORIGINS must be https origins, e.g. https://prod.spline.design'))),
 });
 
 export class ConfigError extends Error {}
@@ -67,6 +73,7 @@ export function readConfig(env = process.env) {
     webDistDir: values.WEB_DIST_DIR ? resolve(values.WEB_DIST_DIR) : resolve(repoRoot, 'apps/web/dist'),
     serveWeb: values.SERVE_WEB ?? isProduction,
     rateLimits: { login: values.RATE_LIMIT_LOGIN, register: values.RATE_LIMIT_REGISTER },
+    splineOrigins: values.SPLINE_ORIGINS,
   };
 }
 

@@ -22,12 +22,12 @@ export default [
     },
   },
   {
-    files: ['apps/server/**/*.js', 'packages/**/*.js', 'scripts/**/*.{js,mjs}', 'e2e/**/*.js', '*.config.js', 'apps/*/*.config.js', 'docker/**/*.js'],
+    files: ['apps/server/**/*.js', 'apps/*/scripts/**/*.js', 'packages/**/*.js', 'scripts/**/*.{js,mjs}', 'e2e/**/*.js', '*.config.js', 'apps/*/*.config.js', 'docker/**/*.js'],
     languageOptions: { globals: { ...globals.node } },
   },
   {
-    // e2e specs pass callbacks to page.evaluate(), which run in the browser.
-    files: ['packages/sync-client/**/*.js', 'packages/shared/**/*.js', 'e2e/**/*.js'],
+    // e2e specs (and the landing measurement) pass callbacks to page.evaluate(), which run in the browser.
+    files: ['packages/sync-client/**/*.js', 'packages/shared/**/*.js', 'e2e/**/*.js', 'scripts/measure-landing.js'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {

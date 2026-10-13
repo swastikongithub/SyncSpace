@@ -318,21 +318,31 @@ export function LandingPage() {
             </h2>
             <ol className="ss-steps">
               <li>
-                <strong>Saved on your device.</strong> The edit is written to the browser’s IndexedDB storage the moment the editor
-                receives it.
+                <span>
+                  <strong>Saved on your device.</strong> The edit is written to the browser’s IndexedDB storage the moment the editor
+                  receives it.
+                </span>
               </li>
               <li>
-                <strong>Sent to the server.</strong> Your device sends the change over a WebSocket, numbered so it can be
-                acknowledged.
+                <span>
+                  <strong>Sent to the server.</strong> Your device sends the change over a WebSocket, numbered so it can be
+                  acknowledged.
+                </span>
               </li>
               <li>
-                <strong>Shared at once.</strong> The server passes it to everyone else in the document straight away.
+                <span>
+                  <strong>Shared at once.</strong> The server passes it to everyone else in the document straight away.
+                </span>
               </li>
               <li>
-                <strong>Written to MongoDB.</strong> The server appends the change to the document’s log in the database.
+                <span>
+                  <strong>Written to MongoDB.</strong> The server appends the change to the document’s log in the database.
+                </span>
               </li>
               <li>
-                <strong>Acknowledged.</strong> Only now does your device count the change as stored on the server.
+                <span>
+                  <strong>Acknowledged.</strong> Only now does your device count the change as stored on the server.
+                </span>
               </li>
             </ol>
             <p className="ss-how-note">

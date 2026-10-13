@@ -1,0 +1,205 @@
+{
+  "measuredAt": "2026-10-13T19:12:16.689Z",
+  "environment": {
+    "os": "Windows_NT 10.0.26200",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13700HX",
+    "cores": 24,
+    "node": "v22.13.1",
+    "browser": "Chromium 156.0.8078.4",
+    "gpuAdapter": "nvidia lovelace",
+    "server": "SyncSpace API serving apps/web/dist over loopback (precompressed Brotli)"
+  },
+  "method": "Cold loads, cache disabled, fresh context per run. FCP/LCP from the Paint and LCP APIs; renderer ready and first frame from the stage element (data-renderer, data-frames).",
+  "summary": {
+    "desktop / unthrottled": {
+      "medianMs": {
+        "firstContentfulPaint": 180,
+        "largestContentfulPaint": 180,
+        "rendererReady": 882,
+        "firstFrame": 938
+      },
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    "desktop / slow-4g-cpu4x": {
+      "medianMs": {
+        "firstContentfulPaint": 1724,
+        "largestContentfulPaint": 1724,
+        "rendererReady": 4462,
+        "firstFrame": 4789
+      },
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    "pixel-7 / unthrottled": {
+      "medianMs": {
+        "firstContentfulPaint": 200,
+        "largestContentfulPaint": 200,
+        "rendererReady": 898,
+        "firstFrame": 959
+      },
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    "pixel-7 / slow-4g-cpu4x": {
+      "medianMs": {
+        "firstContentfulPaint": 1808,
+        "largestContentfulPaint": 1808,
+        "rendererReady": 4635,
+        "firstFrame": 5118
+      },
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    }
+  },
+  "runs": [
+    {
+      "device": "desktop",
+      "profile": "unthrottled",
+      "run": 0,
+      "fcp": 540,
+      "lcp": 540,
+      "rendererReady": 1224,
+      "firstFrame": 1289,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "desktop",
+      "profile": "unthrottled",
+      "run": 1,
+      "fcp": 160,
+      "lcp": 160,
+      "rendererReady": 876,
+      "firstFrame": 936,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "desktop",
+      "profile": "unthrottled",
+      "run": 2,
+      "fcp": 180,
+      "lcp": 180,
+      "rendererReady": 882,
+      "firstFrame": 938,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "desktop",
+      "profile": "slow-4g-cpu4x",
+      "run": 0,
+      "fcp": 1684,
+      "lcp": 1684,
+      "rendererReady": 4509,
+      "firstFrame": 4694,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "desktop",
+      "profile": "slow-4g-cpu4x",
+      "run": 1,
+      "fcp": 1724,
+      "lcp": 1724,
+      "rendererReady": 4339,
+      "firstFrame": 4874,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "desktop",
+      "profile": "slow-4g-cpu4x",
+      "run": 2,
+      "fcp": 1740,
+      "lcp": 1740,
+      "rendererReady": 4462,
+      "firstFrame": 4789,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "pixel-7",
+      "profile": "unthrottled",
+      "run": 0,
+      "fcp": 172,
+      "lcp": 172,
+      "rendererReady": 871,
+      "firstFrame": 936,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "pixel-7",
+      "profile": "unthrottled",
+      "run": 1,
+      "fcp": 252,
+      "lcp": 252,
+      "rendererReady": 1006,
+      "firstFrame": 1062,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "pixel-7",
+      "profile": "unthrottled",
+      "run": 2,
+      "fcp": 200,
+      "lcp": 200,
+      "rendererReady": 898,
+      "firstFrame": 959,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "pixel-7",
+      "profile": "slow-4g-cpu4x",
+      "run": 0,
+      "fcp": 1808,
+      "lcp": 1808,
+      "rendererReady": 4731,
+      "firstFrame": 5118,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "pixel-7",
+      "profile": "slow-4g-cpu4x",
+      "run": 1,
+      "fcp": 1832,
+      "lcp": 1832,
+      "rendererReady": 4635,
+      "firstFrame": 4902,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    },
+    {
+      "device": "pixel-7",
+      "profile": "slow-4g-cpu4x",
+      "run": 2,
+      "fcp": 1716,
+      "lcp": 1716,
+      "rendererReady": 4590,
+      "firstFrame": 5405,
+      "renderer": "webgpu",
+      "transferKiB": 587,
+      "transfer3dKiB": 281
+    }
+  ]
+}

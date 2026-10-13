@@ -1,9 +1,10 @@
+import { Check } from 'lucide-react';
 import { cloneElement, useEffect, useId, useRef, useState } from 'react';
 
 /**
  * A disclosure menu with keyboard support (arrow keys, Home/End, Escape returns focus).
- * `trigger` is a button element; `items` are { label, onSelect, icon?, danger?, disabled? }
- * or { separator: true } or { heading }.
+ * `trigger` is a button element; `items` are { label, onSelect, icon?, danger?, disabled?, checked? }
+ * or { separator: true } or { heading }. Items with `checked` are radio items (one choice of several).
  */
 export function Menu({ trigger, items, align = 'end', label }) {
   const [open, setOpen] = useState(false);
@@ -18,7 +19,8 @@ export function Menu({ trigger, items, align = 'end', label }) {
       if (!root.current?.contains(event.target)) setOpen(false);
     };
     document.addEventListener('pointerdown', onPointer);
-    list.current?.querySelector('[role="menuitem"]:not([aria-disabled="true"])')?.focus();
+    const items = list.current;
+    (items?.querySelector('[aria-checked="true"]') ?? items?.querySelector('[role^="menuitem"]:not([aria-disabled="true"])'))?.focus();
     return () => document.removeEventListener('pointerdown', onPointer);
   }, [open]);
 
@@ -28,7 +30,7 @@ export function Menu({ trigger, items, align = 'end', label }) {
   }
 
   function onKeyDown(event) {
-    const entries = [...(list.current?.querySelectorAll('[role="menuitem"]:not([aria-disabled="true"])') ?? [])];
+    const entries = [...(list.current?.querySelectorAll('[role^="menuitem"]:not([aria-disabled="true"])') ?? [])];
     const index = entries.indexOf(document.activeElement);
     const move = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: entries.length - 1 }[event.key];
     if (move !== undefined) {
@@ -76,7 +78,8 @@ export function Menu({ trigger, items, align = 'end', label }) {
               <button
                 key={item.key ?? item.label}
                 type="button"
-                role="menuitem"
+                role={item.checked === undefined ? 'menuitem' : 'menuitemradio'}
+                aria-checked={item.checked === undefined ? undefined : item.checked}
                 aria-disabled={item.disabled ? 'true' : undefined}
                 aria-current={item.current ? 'true' : undefined}
                 tabIndex={-1}
@@ -92,6 +95,7 @@ export function Menu({ trigger, items, align = 'end', label }) {
                 {Icon && <Icon aria-hidden="true" size={17} className="flex-none" />}
                 <span className="min-w-0 flex-1 truncate">{item.label}</span>
                 {item.hint && <span className="text-xs text-graphite">{item.hint}</span>}
+                {item.checked && <Check aria-hidden="true" size={16} className="flex-none text-carbon" />}
               </button>
             );
           })}

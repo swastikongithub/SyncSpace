@@ -5,11 +5,12 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { PCFShadowMap, WebGPURenderer } from 'three/webgpu';
+import { currentTheme, onThemeChange } from '../../../app/theme.js';
 import { LightTableEngine } from './engine.js';
 
 function readColours() {
   const style = getComputedStyle(document.documentElement);
-  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = currentTheme() === 'dark';
   const surround = style.getPropertyValue('--desk').trim() || (dark ? '#14121c' : '#e6e4ec');
   return dark
     ? { surround, spill: '#3b3656', spillStrength: 0.75, glow: '#ebe8f4', grid: '#cfcadf', bezel: '#46415e', metal: '#4a4562' }
@@ -31,16 +32,14 @@ function TableScene({ store, activeRef, motionRef, onFrame, pitch, framing }) {
     if (import.meta.env.DEV) window.__lightTable = engine;
   }, [engine]);
 
-  // Page colours (light or dark) around the pad.
+  // Page colours (the theme the person chose, or the system's) around the pad.
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
       engine.setColours(readColours());
       if (activeRef.current) invalidate();
     };
     apply();
-    media.addEventListener('change', apply);
-    return () => media.removeEventListener('change', apply);
+    return onThemeChange(apply);
   }, [engine, invalidate, activeRef]);
 
   // Follow the story. Off screen, the change is recorded but not drawn: StageFrame asks for a

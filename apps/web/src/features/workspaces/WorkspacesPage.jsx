@@ -6,6 +6,7 @@ import { api, fieldError, NetworkError } from '../../lib/api.js';
 import { deviceMemory } from '../../lib/device-memory.js';
 import { invalidate } from '../../lib/resource.js';
 import { Brand } from '../../ui/Brand.jsx';
+import { ThemeMenu } from '../../ui/ThemeMenu.jsx';
 import { Button } from '../../ui/Button.jsx';
 import { TextField } from '../../ui/TextField.jsx';
 import { useWorkspaces } from '../data.js';
@@ -76,7 +77,10 @@ export function WorkspacesPage() {
   return (
     <div className="min-h-dvh bg-desk">
       <main id="main" className="mx-auto flex max-w-2xl flex-col gap-8 px-5 py-10">
-        <Brand to="/w" />
+        <div className="flex items-center justify-between gap-3">
+          <Brand to="/w" />
+          <ThemeMenu />
+        </div>
         {list.length === 0 && !creating ? (
           <section className="rounded-lg bg-sheet p-6 shadow-sheet sm:p-8">
             <h1 className="font-writing text-[1.9rem] font-[620] leading-tight">Start a workspace, {user.name.split(' ')[0]}</h1>

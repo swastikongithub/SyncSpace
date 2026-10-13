@@ -5,6 +5,7 @@ import { useAuth } from '../../app/auth.jsx';
 import { ApiError, fieldError, NetworkError } from '../../lib/api.js';
 import { useOnline } from '../../lib/online.js';
 import { Brand } from '../../ui/Brand.jsx';
+import { ThemeMenu } from '../../ui/ThemeMenu.jsx';
 import { Button } from '../../ui/Button.jsx';
 import { Notice } from '../../ui/Notice.jsx';
 import { TextField } from '../../ui/TextField.jsx';
@@ -20,7 +21,10 @@ function AuthLayout({ children }) {
     <div className="min-h-dvh bg-desk">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-16 lg:py-14">
         <main id="main" className="flex flex-col gap-8">
-          <Brand />
+          <div className="flex items-center justify-between gap-3">
+            <Brand />
+            <ThemeMenu />
+          </div>
           <div className="flex flex-col gap-3">
             <h1 className="font-writing text-[2.1rem] font-[620] leading-[1.12] tracking-[-0.015em] sm:text-[2.5rem]">
               Shared documents that keep working offline.

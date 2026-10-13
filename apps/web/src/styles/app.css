@@ -45,43 +45,43 @@
   --ply-pewter-ink: #4c5262;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --desk: #14121c;
-    --desk-raised: #1a1824;
-    --sheet: #1d1a28;
-    --ink: #ece9f6;
-    --graphite: #a7a2bd;
-    --rule: #34304a;
-    --rule-strong: #7d7898;
-    --carbon: #a79bff;
-    --carbon-strong: #c3baff;
-    --carbon-wash: #2a2550;
-    --wet: #8f84ff;
-    --correction: #ff8a80;
-    --correction-wash: #3b1716;
-    --caution: #f6d27a;
-    --caution-wash: #3a3010;
-    --shadow-sheet: 0 1px 0 rgb(0 0 0 / 0.4), 0 16px 36px -20px rgb(0 0 0 / 0.8);
+/* Dark tokens follow the theme on <html data-theme>, set from the person's choice or the system
+   setting (src/app/theme.js, and public/theme-boot.js before first paint). */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --desk: #14121c;
+  --desk-raised: #1a1824;
+  --sheet: #1d1a28;
+  --ink: #ece9f6;
+  --graphite: #a7a2bd;
+  --rule: #34304a;
+  --rule-strong: #7d7898;
+  --carbon: #a79bff;
+  --carbon-strong: #c3baff;
+  --carbon-wash: #2a2550;
+  --wet: #8f84ff;
+  --correction: #ff8a80;
+  --correction-wash: #3b1716;
+  --caution: #f6d27a;
+  --caution-wash: #3a3010;
+  --shadow-sheet: 0 1px 0 rgb(0 0 0 / 0.4), 0 16px 36px -20px rgb(0 0 0 / 0.8);
 
-    --ply-canary: #4a3d10;
-    --ply-canary-ink: #f2ce5a;
-    --ply-rose: #4a1f2b;
-    --ply-rose-ink: #f49ab0;
-    --ply-sky: #1c3352;
-    --ply-sky-ink: #8db9f2;
-    --ply-mint: #173b2a;
-    --ply-mint-ink: #84d3a7;
-    --ply-lilac: #30265a;
-    --ply-lilac-ink: #b9a6ff;
-    --ply-apricot: #4a2a14;
-    --ply-apricot-ink: #f5ae7c;
-    --ply-teal: #123b39;
-    --ply-teal-ink: #78d0ca;
-    --ply-pewter: #2e3240;
-    --ply-pewter-ink: #b5bbc9;
-  }
+  --ply-canary: #4a3d10;
+  --ply-canary-ink: #f2ce5a;
+  --ply-rose: #4a1f2b;
+  --ply-rose-ink: #f49ab0;
+  --ply-sky: #1c3352;
+  --ply-sky-ink: #8db9f2;
+  --ply-mint: #173b2a;
+  --ply-mint-ink: #84d3a7;
+  --ply-lilac: #30265a;
+  --ply-lilac-ink: #b9a6ff;
+  --ply-apricot: #4a2a14;
+  --ply-apricot-ink: #f5ae7c;
+  --ply-teal: #123b39;
+  --ply-teal-ink: #78d0ca;
+  --ply-pewter: #2e3240;
+  --ply-pewter-ink: #b5bbc9;
 }
 
 @theme inline {

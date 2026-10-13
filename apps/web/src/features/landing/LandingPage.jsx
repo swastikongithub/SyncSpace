@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { Brand } from '../../ui/Brand.jsx';
 import { ButtonLink } from '../../ui/Button.jsx';
 import { RegistrationMark } from '../../ui/RegistrationMark.jsx';
+import { ThemeMenu } from '../../ui/ThemeMenu.jsx';
 import { DevicesSection } from './DevicesSection.jsx';
 import { createStageStore } from './stage-store.js';
 import { StageFrame } from './StageFrame.jsx';
@@ -73,6 +74,7 @@ function Header() {
           <a href="#try">Try it</a>
         </nav>
         <div className="ss-landing-actions">
+          <ThemeMenu />
           <Link to="/signin" className="ss-landing-signin">
             Sign in
           </Link>

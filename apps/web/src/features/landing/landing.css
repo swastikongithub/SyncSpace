@@ -320,7 +320,7 @@
   stroke-width: 9;
   filter: drop-shadow(0 0 40px rgb(255 255 255 / 0.5));
 }
-@media (prefers-color-scheme: dark) {
+[data-theme='dark'] {
   .ss-poster-glass {
     fill: #ebe8f4;
     stroke: #46415e;

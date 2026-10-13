@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
+import './app/theme.js';
 import { AuthProvider } from './app/auth.jsx';
 import { LocalDataProvider } from './app/local-data.jsx';
 import { router } from './app/router.jsx';

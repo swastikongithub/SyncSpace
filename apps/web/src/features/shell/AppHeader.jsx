@@ -10,6 +10,7 @@ import { plyClass } from '../../ui/Ply.jsx';
 import { SignOutDialog } from '../account/SignOutDialog.jsx';
 import { useWorkspaces } from '../data.js';
 import { SearchDialog } from '../search/SearchDialog.jsx';
+import { ThemeMenu } from '../../ui/ThemeMenu.jsx';
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -101,6 +102,7 @@ export function AppHeader({ workspace }) {
           <span className="hidden sm:inline">Search</span>
           <kbd className="hidden rounded border border-rule px-1.5 py-0.5 font-ui text-xs font-semibold text-graphite md:inline">{isMac ? '⌘K' : 'Ctrl K'}</kbd>
         </Button>
+        <ThemeMenu />
         <AccountMenu />
       </div>
       <SearchDialog open={searching} onClose={() => setSearching(false)} workspaceId={workspace?.id} />

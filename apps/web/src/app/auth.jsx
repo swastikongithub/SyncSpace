@@ -71,8 +71,13 @@ export function AuthProvider({ children }) {
     onUnauthorized(expire);
   }, [expire]);
 
-  const signIn = useCallback(async ({ email, password }) => {
+  /**
+   * `beforeCommit` runs after the server accepts and before this tab switches to the user (which
+   * remounts everything under LocalDataProvider): the sign-in page uses it to finish its moment.
+   */
+  const signIn = useCallback(async ({ email, password }, { beforeCommit } = {}) => {
     const { user } = await api.post('/auth/login', { email, password });
+    await beforeCommit?.();
     deviceMemory.setPendingSignOut(false);
     deviceMemory.setLastUser(user);
     clearAll();
@@ -80,8 +85,9 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
-  const register = useCallback(async ({ name, email, password }) => {
+  const register = useCallback(async ({ name, email, password }, { beforeCommit } = {}) => {
     const { user } = await api.post('/auth/register', { name, email, password });
+    await beforeCommit?.();
     deviceMemory.setPendingSignOut(false);
     deviceMemory.setLastUser(user);
     clearAll();

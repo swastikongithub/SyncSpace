@@ -1,0 +1,728 @@
+/* ---------------------------------------------------------------------------------------
+   Sign-in pages. Hand-written, scoped to .ss-auth-* and unlayered, so it wins over the app's
+   Tailwind base without competing with utilities. Same tokens as the app (desk, sheet, ink,
+   carbon, wet, correction). The light table is the one bold element; the form stays quiet.
+   See docs/design.md, "Sign-in pages".
+   --------------------------------------------------------------------------------------- */
+
+/* The register form can scroll where sign-in does not; keep the page from shifting sideways
+   when the scrollbar comes and goes. */
+html:has(.ss-auth) {
+  scrollbar-gutter: stable;
+}
+
+.ss-auth {
+  --auth-gutter: clamp(1rem, 3.2vw, 2.75rem);
+  --auth-inset: 0.75rem;
+  --auth-raised: var(--sheet);
+  --auth-track: color-mix(in oklab, var(--ink) 7%, var(--desk));
+  --auth-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --auth-field-shadow: inset 0 1px 2px rgb(33 29 51 / 0.07);
+
+  /* The light table's palette. The shader reads these, so they are plain colours. */
+  --table-glass: #f3f2f8;
+  --table-glow: #ffffff;
+  --table-grid: #7f7b96;
+  --table-film-ink: #4a4560;
+  --table-ink: #4b3fc4;
+  --table-wet-ink: #7b6fe8;
+  --table-paper: #fdfcff;
+  --table-bezel: rgb(33 29 51 / 0.1);
+
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas: 'bar' 'table' 'main' 'foot';
+  background: var(--desk);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .ss-auth {
+  --auth-raised: #2c2839;
+  --auth-track: #1f1c2a;
+  --auth-field-shadow: inset 0 1px 2px rgb(0 0 0 / 0.35);
+  --table-glass: #13111b;
+  --table-glow: #221e33;
+  --table-grid: #8f89ab;
+  --table-film-ink: #5f5a78;
+  --table-ink: #a79bff;
+  --table-wet-ink: #7d70f0;
+  --table-paper: #2a2540;
+  --table-bezel: rgb(255 255 255 / 0.07);
+}
+
+@media (min-width: 64rem) {
+  .ss-auth {
+    grid-template-columns: minmax(30rem, 0.82fr) minmax(0, 1.18fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'bar table' 'main table' 'foot table';
+  }
+}
+
+/* ---- Bar and footer -------------------------------------------------------------------- */
+
+.ss-auth-bar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem var(--auth-gutter);
+}
+
+.ss-auth-foot {
+  grid-area: foot;
+  padding: 1rem var(--auth-gutter) 1.5rem;
+  font-size: 0.875rem;
+  color: var(--graphite);
+}
+.ss-auth-foot p {
+  margin: 0;
+}
+.ss-auth-foot a {
+  font-weight: 650;
+  color: var(--carbon);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.ss-auth-foot a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---- The form column ------------------------------------------------------------------- */
+
+.ss-auth-main {
+  grid-area: main;
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  padding: 1.75rem var(--auth-gutter) 0.5rem;
+}
+.ss-auth-column {
+  width: min(100%, 24rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+/* Anchored from the top, not centred: a message appearing in the form pushes only what is
+   below it, and nothing above the field being typed in moves. */
+@media (min-width: 64rem) {
+  .ss-auth-main {
+    padding-block: clamp(1rem, 11vh - 1.5rem, 7rem) 1.5rem;
+  }
+}
+
+/* Sign in | Create account. The raised thumb is a sheet that slides between the two. */
+.ss-auth-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--auth-track);
+  box-shadow: inset 0 1px 2px rgb(33 29 51 / 0.08);
+  view-transition-name: auth-switch;
+}
+.ss-auth-switch a {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  height: 2.5rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  color: var(--graphite);
+  text-decoration: none;
+  transition: color 160ms ease-out;
+}
+.ss-auth-switch a:hover,
+.ss-auth-switch a[aria-current='page'] {
+  color: var(--ink);
+}
+.ss-auth-switch a:focus-visible {
+  outline-offset: -2px;
+}
+.ss-auth-switch-thumb {
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc(50% - 4px);
+  border-radius: 8px;
+  background: var(--auth-raised);
+  box-shadow:
+    0 1px 2px rgb(33 29 51 / 0.12),
+    0 6px 14px -8px rgb(33 29 51 / 0.35);
+  transition: translate 340ms var(--auth-ease);
+}
+.ss-auth-switch[data-mode='register'] .ss-auth-switch-thumb {
+  translate: 100% 0;
+}
+
+.ss-auth-heading h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.45rem + 1vw, 2.125rem);
+  font-weight: 760;
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+}
+.ss-auth-heading p {
+  margin: 0.5rem 0 0;
+  max-width: 34ch;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--graphite);
+}
+
+/* ---- Fields -------------------------------------------------------------------------- */
+
+.ss-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+.ss-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ss-auth-label {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+.ss-auth-control {
+  position: relative;
+}
+/* The focus ring is a second plate: it arrives out of register and slides onto the field. */
+.ss-auth-control::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--carbon);
+  border-radius: 12px;
+  opacity: 0;
+  translate: 6px -6px;
+  transition:
+    translate 300ms var(--auth-ease),
+    opacity 140ms ease-out;
+  pointer-events: none;
+}
+.ss-auth-control:has(.ss-auth-input:focus-visible)::before {
+  opacity: 1;
+  translate: 0 0;
+}
+.ss-auth-control:has([aria-invalid='true'])::before {
+  border-color: var(--correction);
+}
+
+.ss-auth-input {
+  width: 100%;
+  height: 3rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 8px;
+  background: var(--sheet);
+  box-shadow: var(--auth-field-shadow);
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  transition: border-color 140ms ease-out;
+}
+.ss-auth-input:hover {
+  border-color: color-mix(in oklab, var(--rule-strong) 55%, var(--ink));
+}
+.ss-auth-input:focus-visible {
+  outline: none;
+  border-color: var(--carbon);
+}
+.ss-auth-input[aria-invalid='true'] {
+  border-color: var(--correction);
+}
+/* Browser autofill keeps the field's own colours instead of a pale yellow or blue slab. */
+.ss-auth-input:autofill,
+.ss-auth-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  box-shadow:
+    inset 0 0 0 100px var(--carbon-wash),
+    var(--auth-field-shadow);
+}
+
+.ss-auth-control--password .ss-auth-input {
+  padding-right: 4.75rem;
+}
+.ss-auth-reveal {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  translate: 0 -50%;
+  height: 2.375rem;
+  min-width: 3.75rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--carbon);
+}
+.ss-auth-reveal:hover {
+  background: var(--carbon-wash);
+}
+
+.ss-auth-hint,
+.ss-auth-error {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.ss-auth-hint {
+  color: var(--graphite);
+}
+.ss-auth-error {
+  display: flex;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--correction);
+}
+.ss-auth-error svg {
+  flex: none;
+  margin-top: 0.12em;
+}
+
+.ss-auth-caps {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  margin: 0;
+  padding: 0.25rem 0.6rem 0.25rem 0.45rem;
+  border-radius: 6px;
+  background: var(--caution-wash);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--caution);
+  transition:
+    opacity 160ms ease-out,
+    translate 160ms ease-out;
+}
+@starting-style {
+  .ss-auth-caps {
+    opacity: 0;
+    translate: 0 -3px;
+  }
+}
+
+/* A new password's length as a printer's rule: ticks print in wet ink and dry at the minimum. */
+.ss-auth-rule {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+}
+.ss-auth-rule span {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+  transition: background-color 180ms ease-out;
+}
+.ss-auth-rule span[data-on] {
+  background: var(--wet);
+}
+.ss-auth-rule[data-met] span {
+  background: var(--carbon);
+}
+
+/* ---- Submit ---------------------------------------------------------------------------
+   Two impressions of one button: the face and a wet plate just out of register beneath it.
+   Pressing (or submitting) prints the face onto its plate. */
+
+.ss-auth-submit {
+  position: relative;
+  isolation: isolate;
+  height: 3.125rem;
+  margin-top: 0.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  color: var(--sheet);
+  -webkit-tap-highlight-color: transparent;
+}
+.ss-auth-submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--wet) 75%, var(--desk));
+  translate: 2px 3px;
+}
+.ss-auth-submit:focus-visible {
+  outline-offset: 6px;
+}
+.ss-auth-submit-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--carbon);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  transition:
+    translate 150ms var(--auth-ease),
+    background-color 150ms ease-out;
+}
+.ss-auth-submit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.ss-auth-submit:hover .ss-auth-submit-face {
+  background: var(--carbon-strong);
+  translate: 1px 1.5px;
+}
+.ss-auth-submit:active .ss-auth-submit-face,
+.ss-auth-submit[data-phase='busy'] .ss-auth-submit-face,
+.ss-auth-submit[data-phase='success'] .ss-auth-submit-face {
+  translate: 2px 3px;
+}
+.ss-auth-submit[aria-disabled='true'] {
+  cursor: progress;
+}
+.ss-auth-submit-mark rect,
+.ss-auth-submit-mark path {
+  stroke: currentColor;
+}
+.ss-auth-submit-mark .ss-plate {
+  animation: ss-auth-hunt 760ms var(--auth-ease) infinite alternate;
+}
+@keyframes ss-auth-hunt {
+  from {
+    transform: translate(4px, -4px);
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+.ss-auth-alert {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid color-mix(in oklab, var(--correction) 45%, transparent);
+  border-radius: 8px;
+  background: var(--correction-wash);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* ---- Notices and demo accounts ------------------------------------------------------- */
+
+.ss-auth-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ss-auth-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  transition:
+    opacity 200ms ease-out,
+    translate 200ms var(--auth-ease);
+}
+@starting-style {
+  .ss-auth-notice {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+.ss-auth-notice svg {
+  margin-top: 0.1rem;
+}
+.ss-auth-notice p {
+  margin: 0;
+}
+.ss-auth-notice-title {
+  font-weight: 700;
+}
+.ss-auth-notice[data-tone='carbon'] {
+  border-color: color-mix(in oklab, var(--carbon) 30%, transparent);
+  background: var(--carbon-wash);
+}
+.ss-auth-notice[data-tone='carbon'] svg {
+  color: var(--carbon);
+}
+.ss-auth-notice[data-tone='caution'] {
+  border-color: color-mix(in oklab, var(--caution) 35%, transparent);
+  background: var(--caution-wash);
+}
+.ss-auth-notice[data-tone='caution'] svg {
+  color: var(--caution);
+}
+
+.ss-auth-demo {
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--rule-strong);
+}
+.ss-auth-demo h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.ss-auth-demo ul {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0 -0.625rem;
+  padding: 0;
+  list-style: none;
+}
+.ss-auth-demo button {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  color: var(--ink);
+}
+.ss-auth-demo button:hover {
+  background: color-mix(in oklab, var(--ink) 6%, transparent);
+}
+.ss-auth-demo button span:first-child {
+  font-weight: 650;
+}
+.ss-auth-demo button span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--graphite);
+}
+
+/* ---- The light table ------------------------------------------------------------------
+   Phones: a short band under the bar, a close crop of the two sheets. Desktop: a backlit pad
+   beside the form, sticky, with the words over its lower part. */
+
+.ss-auth-table {
+  grid-area: table;
+  position: relative;
+  height: clamp(8.5rem, 22svh, 12rem);
+  margin: 0 var(--auth-gutter);
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--table-glass);
+  box-shadow:
+    0 0 0 1px var(--table-bezel),
+    0 18px 40px -26px rgb(33 29 51 / 0.45);
+  view-transition-name: auth-table;
+}
+.ss-auth-glass {
+  position: absolute;
+  inset: 0;
+}
+.ss-auth-canvas,
+.ss-auth-still {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ss-auth-still-mine {
+  transition: transform 520ms var(--auth-ease);
+}
+
+.ss-auth-table-copy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 64rem) {
+  .ss-auth-table {
+    position: sticky;
+    top: var(--auth-inset);
+    align-self: start;
+    height: calc(100dvh - 2 * var(--auth-inset));
+    min-height: 34rem;
+    margin: var(--auth-inset) var(--auth-inset) var(--auth-inset) 0;
+    border-radius: 22px;
+  }
+  .ss-auth-still {
+    height: 62%;
+  }
+  .ss-auth-table-copy {
+    inset: auto 0 0 0;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    padding: clamp(2rem, 3.4vw, 3.25rem);
+    pointer-events: none;
+  }
+}
+
+.ss-auth-display {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-writing);
+  font-size: clamp(2rem, 0.9rem + 1.9vw, 3rem);
+  font-weight: 560;
+  font-variation-settings: 'opsz' 72;
+  line-height: 1.04;
+  letter-spacing: -0.024em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.ss-auth-table-lede {
+  margin: 1rem 0 0;
+  max-width: 42ch;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--graphite);
+}
+.ss-auth-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin: 1.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--graphite);
+}
+.ss-auth-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ss-auth-key::before {
+  content: '';
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+}
+.ss-auth-key--mine::before {
+  background: var(--table-ink);
+}
+.ss-auth-key--server::before {
+  background: var(--table-film-ink);
+}
+.ss-auth-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.ss-auth-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Switching between the two pages (View Transitions) ------------------------------
+   Shared fields keep their place and slide; the name field prints in; the table and the
+   switch stay live (their old snapshots are dropped) so nothing on them freezes. */
+
+::view-transition-group(*) {
+  animation-duration: 360ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+}
+::view-transition-old(auth-table),
+::view-transition-old(auth-switch) {
+  display: none;
+}
+::view-transition-new(auth-table),
+::view-transition-new(auth-switch) {
+  animation: none;
+}
+/* Words that change (heading, lede, button label) never overlap: the old leave, then the new
+   arrive. Neither is stretched while its box changes size. The button itself just moves. */
+::view-transition-old(auth-title),
+::view-transition-new(auth-title),
+::view-transition-old(auth-lede),
+::view-transition-new(auth-lede),
+::view-transition-old(auth-submit-label),
+::view-transition-new(auth-submit-label) {
+  inline-size: auto;
+  block-size: auto;
+}
+::view-transition-old(auth-title),
+::view-transition-old(auth-lede),
+::view-transition-old(auth-submit-label) {
+  animation: ss-auth-leave 110ms ease-in both;
+}
+::view-transition-new(auth-title),
+::view-transition-new(auth-lede),
+::view-transition-new(auth-submit-label) {
+  animation: ss-auth-arrive 220ms ease-out 90ms both;
+}
+/* The name field prints in once the fields below have moved out of its way. */
+::view-transition-new(auth-field-name) {
+  animation: ss-auth-field-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) 150ms both;
+}
+::view-transition-old(auth-field-name) {
+  animation: ss-auth-field-out 140ms ease-in both;
+}
+@keyframes ss-auth-leave {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes ss-auth-arrive {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ss-auth-field-in {
+  from {
+    opacity: 0;
+    transform: translate(6px, -8px);
+  }
+}
+@keyframes ss-auth-field-out {
+  to {
+    opacity: 0;
+    transform: translate(6px, -6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .ss-auth-submit-mark .ss-plate {
+    animation: none;
+  }
+}

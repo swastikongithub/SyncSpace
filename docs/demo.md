@@ -12,7 +12,9 @@ Use two separate browser profiles (or one normal and one private window) so each
 
 ## 1. The promise, before signing in
 
-On the sign-in page, use **Try it: one page, three copies**. Take *your laptop* offline, type in both the laptop and Ana's phone, then reconnect. Both edits survive and the copies come back into register. The explainer runs real Yjs replicas in the page.
+On the landing page (`/`, signed out), use **Try it: one page, three copies**. Take *your laptop* offline, type in both the laptop and Ana's phone, then reconnect. Both edits survive and the copies come back into register. The demo runs real Yjs replicas in the page.
+
+The sign-in page tells the same story in one gesture: this device's copy lies out of register beside the form and snaps into register when you sign in.
 
 ## 2. Two people in one document
 

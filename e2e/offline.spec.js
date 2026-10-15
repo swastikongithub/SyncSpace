@@ -65,7 +65,7 @@ test('signing out while offline keeps unsent work on the device and says the ser
   // background, without anyone opening the document.
   await context.setOffline(false);
   await page.getByLabel('Email').fill(account.email);
-  await page.getByLabel('Password').fill(account.password);
+  await page.getByLabel('Password', { exact: true }).fill(account.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL(/\/w\//);
   await expect(page.getByText(/unsent edits? on this device/)).toHaveCount(0, { timeout: 20_000 });
@@ -74,7 +74,7 @@ test('signing out while offline keeps unsent work on the device and says the ser
   const other = await (await page.context().browser().newContext()).newPage();
   await other.goto('/signin');
   await other.getByLabel('Email').fill(account.email);
-  await other.getByLabel('Password').fill(account.password);
+  await other.getByLabel('Password', { exact: true }).fill(account.password);
   await other.getByRole('button', { name: 'Sign in' }).click();
   await other.waitForURL(/\/w(\/|$)/);
   await other.goto(docUrl);

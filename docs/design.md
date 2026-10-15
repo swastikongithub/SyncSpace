@@ -124,6 +124,36 @@ See [ADR 0005](adr/0005-advanced-graphics.md) for the measured evaluation. Summa
 
 The public landing page is the exception ([ADR 0007](adr/0007-landing-page-graphics.md)): its "light table" uses Three.js, React Three Fiber and WebGPU to show copies diverging and merging, lazy-loaded and kept out of the app. Its direction and reasoning are in [landing-page-design.md](landing-page-design.md).
 
-## 9. Design reviews
+## 9. Sign-in pages
+
+`/signin` and `/register` share one layout route (`features/auth/AuthPages.jsx`), so the illustration beside the form keeps running while you switch between them. Styles are hand-written in `features/auth/auth.css` (no utility classes), scoped to `.ss-auth-*`.
+
+**The job.** Get people in quickly, and make the product's one idea visible to someone who arrives here first (often from an invitation link). The previous page put a live three-copy demo beside the form; it competed with the task. That demo now lives only on the landing page.
+
+**The direction: registration.** The panel beside the form is the light table again, in two dimensions: the server's copy of a page on clear film (grey ink) and this device's copy on paper (violet ink), both printed with the same 45° halftone screen. The page has a title, a byline, a halftone picture and two paragraphs.
+
+| Moment | The table | The words |
+|---|---|---|
+| Signed out | This device's copy lies out of register; where the two screens overlap they beat as moiré | "Not signed in on this device" |
+| Filling the form | The copy drifts at most halfway in. On *Create account* it starts blank and its lines print as the fields fill | |
+| Signing in | Further in; the button's registration mark hunts | "Signing in…" |
+| Success | It snaps into register: every dot lands on its twin, the targets coincide, the wet ink dries | "In step with the server", button "Signed in" |
+| Failure | It jolts back out | The error, in a `role="alert"` message |
+
+Rejected: the split-screen template (brand gradient, testimonial, logo strip), floating labels, an eye icon for the password, a gradient button, fade-up entrances.
+
+**Layout.** Desktop: the form column (24 rem, anchored from the top so a message appearing pushes only what is below it) beside a sticky backlit pad, words in its lower third. Phones: a short band of the table under the bar, cropped close; its words stay in the accessibility tree.
+
+**Form details.** Labels above fields. The focus ring is a second plate that slides into register with the field's edge. *Show/Hide password* is a text button whose accessible name says what it does. A *Caps Lock is on* note appears while it is. A new password shows its length as a rule of ticks that print in wet ink and dry at the minimum, with "*n* more characters." in words. `autocomplete="username"` / `current-password` / `new-password` for password managers. *Sign in / Create account* is a navigation switch (`aria-current`), and the shared fields morph between the two pages with the View Transitions API: words that change leave before the new ones arrive, and the name field prints in once the fields below have moved.
+
+**Technology.**
+
+- One WebGL 2 fragment shader (`registration-gl.js`), no library, under 11 KB of source gzipped together with its React and form code. It draws the glass, cutting grid, both sheets, halftone, registration targets and the lifted sheet's shadow; light themes overprint (multiply), dark themes add light (screen). The colours are CSS tokens read at runtime and re-read when the theme changes.
+- Poses, springs and layout are pure functions (`registration.js`, unit-tested). Springs step in fixed substeps, so motion keeps real time at any frame rate. Frames are drawn only while something moves (an e2e test asserts the table stops drawing).
+- The success moment holds the session change: `signIn`/`register` take a `beforeCommit` step, awaited after the server accepts and before the tab switches user, because that switch remounts the whole router.
+- Without WebGL 2, or after a lost context, the same sheets are a still SVG.
+- Reduced motion: the copy jumps to each pose, the entrance and jolt are skipped, the app opens without waiting, and view transitions are off.
+
+## 10. Design reviews
 
 Screenshot-based reviews of the built interface, their findings and the changes made are logged in [design-reviews.md](design-reviews.md).

@@ -1,6 +1,6 @@
 # ADR 0005: Advanced graphics (Three.js, React Three Fiber, WebGPU, Spline)
 
-- Status: accepted; amended for the public landing page by [ADR 0007](0007-landing-page-graphics.md) (the app itself is unchanged)
+- Status: accepted; amended for the public landing page by [ADR 0007](0007-landing-page-graphics.md), and for the sign-in pages, which now draw their illustration with one dependency-free WebGL 2 shader ([design.md §9](../design.md#9-sign-in-pages)). The app's own screens are unchanged.
 - Date: 2026-10-12
 
 ## Context
@@ -46,7 +46,7 @@ R3F pulls in the full `three` namespace for its JSX catalogue, so unused modules
 None of the four technologies ships. The spatial ideas are built with **CSS 3D transforms and SVG over real DOM text**:
 
 - The copies rail and the header registration mark are SVG/CSS. Offsets encode state, and a text label always accompanies them.
-- The sign-in explainer runs three real Y.Docs with real `<textarea>`s; the sheets are DOM elements with CSS transforms.
+- The sign-in explainer runs three real Y.Docs with real `<textarea>`s; the sheets are DOM elements with CSS transforms. *(Since moved to the landing page; the sign-in pages now show a shader-drawn light table, see the status line.)*
 
 ## Consequences
 

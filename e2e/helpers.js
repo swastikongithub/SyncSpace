@@ -13,7 +13,7 @@ export async function register(page, account) {
   await page.goto('/register');
   await page.getByLabel('Your name').fill(account.name);
   await page.getByLabel('Email').fill(account.email);
-  await page.getByLabel('Password').fill(account.password);
+  await page.getByLabel('Password', { exact: true }).fill(account.password);
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.waitForURL(/\/w(\/|$|\?)/);
 }

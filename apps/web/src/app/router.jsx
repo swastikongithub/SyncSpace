@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import { InvitePage } from '../features/auth/InvitePage.jsx';
-import { RegisterPage, SignInPage } from '../features/auth/AuthPages.jsx';
+import { AuthLayout, RegisterPage, SignInPage } from '../features/auth/AuthPages.jsx';
 import { MembersPage } from '../features/members/MembersPage.jsx';
 import { WorkspaceLayout } from '../features/shell/WorkspaceLayout.jsx';
 import { TrashPage } from '../features/documents/TrashPage.jsx';
@@ -14,8 +14,13 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { path: '/', element: <Home /> },
-      { path: '/signin', element: <SignInPage /> },
-      { path: '/register', element: <RegisterPage /> },
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: '/signin', element: <SignInPage /> },
+          { path: '/register', element: <RegisterPage /> },
+        ],
+      },
       { path: '/invite/:token', element: <InvitePage /> },
       {
         element: <RequireUser />,

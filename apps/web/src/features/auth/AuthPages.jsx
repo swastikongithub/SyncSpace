@@ -1,57 +1,32 @@
-import { lazy, Suspense, useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
-import { WifiOff } from 'lucide-react';
+// Sign in and create an account. One layout route holds both pages, so the light table beside the
+// form keeps running while you switch between them, and the shared fields morph into place (View
+// Transitions). Styles are hand-written in auth.css. See docs/design.md, "Sign-in pages".
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { Link, Navigate, Outlet, useLocation, useOutletContext, useSearchParams } from 'react-router';
+import { Check, Info, WifiOff } from 'lucide-react';
+import { LIMITS } from '@syncspace/shared/limits';
 import { useAuth } from '../../app/auth.jsx';
 import { ApiError, fieldError, NetworkError } from '../../lib/api.js';
 import { useOnline } from '../../lib/online.js';
 import { Brand } from '../../ui/Brand.jsx';
+import { RegistrationMark } from '../../ui/RegistrationMark.jsx';
 import { ThemeMenu } from '../../ui/ThemeMenu.jsx';
-import { Button } from '../../ui/Button.jsx';
-import { Notice } from '../../ui/Notice.jsx';
-import { TextField } from '../../ui/TextField.jsx';
+import { AuthField, PasswordField } from './AuthFields.jsx';
+import { RegistrationTable } from './RegistrationTable.jsx';
+import { createAuthStage, registerProgress, signInProgress } from './registration.js';
+import './auth.css';
 
-const ReplicaDemo = lazy(() => import('./ReplicaDemo.jsx'));
+/** How long the copy takes to snap into register before the app opens. */
+const SETTLE_MS = 620;
 
 function safeNext(value) {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : '/';
 }
 
-function AuthLayout({ children }) {
-  return (
-    <div className="min-h-dvh bg-desk">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-16 lg:py-14">
-        <main id="main" className="flex flex-col gap-8">
-          <div className="flex items-center justify-between gap-3">
-            <Brand />
-            <ThemeMenu />
-          </div>
-          <div className="flex flex-col gap-3">
-            <h1 className="font-writing text-[2.1rem] font-[620] leading-[1.12] tracking-[-0.015em] sm:text-[2.5rem]">
-              Shared documents that keep working offline.
-            </h1>
-            <p className="max-w-prose text-[1.05rem] leading-relaxed text-graphite">
-              Everyone edits the same page. When a connection drops, writing continues on that device, and every copy merges
-              when it comes back: edits are combined, not replaced.
-            </p>
-          </div>
-          {children}
-        </main>
-        <aside aria-labelledby="demo-heading" className="flex flex-col gap-4">
-          <div>
-            <h2 id="demo-heading" className="text-lg font-bold">
-              Try it: one page, three copies
-            </h2>
-            <p className="text-sm text-graphite">
-              Type in either device, take one offline, keep typing in both, then reconnect.
-            </p>
-          </div>
-          <Suspense fallback={<div className="h-[34rem] rounded-lg border border-dashed border-rule" aria-hidden="true" />}>
-            <ReplicaDemo />
-          </Suspense>
-        </aside>
-      </div>
-    </div>
-  );
+function useNextSuffix() {
+  const [params] = useSearchParams();
+  const next = params.get('next');
+  return next ? `?next=${encodeURIComponent(safeNext(next))}` : '';
 }
 
 function describeAuthError(error) {
@@ -60,173 +35,303 @@ function describeAuthError(error) {
   return null;
 }
 
-export function SignInPage() {
-  const auth = useAuth();
-  const online = useOnline();
-  const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const next = safeNext(params.get('next'));
-  const [email, setEmail] = useState(auth.endedFor?.email ?? '');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(false);
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const settle = () => new Promise((resolve) => setTimeout(resolve, reducedMotion() ? 0 : SETTLE_MS));
 
-  if (auth.status === 'signed-in') return <Navigate to={next} replace />;
+function usePageTitle(title) {
+  useEffect(() => {
+    const previous = document.title;
+    document.title = title;
+    return () => {
+      document.title = previous;
+    };
+  }, [title]);
+}
+
+/**
+ * Runs a sign-in or registration: busy while the request is out; once the server accepts, the
+ * copy snaps into register before this tab switches to the user, and the layout then opens the
+ * app. On failure the copy jolts back out and the error is shown.
+ */
+function useAuthSubmit(stage, action) {
+  const [error, setError] = useState(null);
+  const { phase } = useSyncExternalStore(stage.subscribe, stage.get);
 
   async function submit(event) {
     event.preventDefault();
-    setBusy(true);
+    if (phase === 'busy' || phase === 'success') return;
     setError(null);
+    stage.set({ phase: 'busy' });
     try {
-      await auth.signIn({ email, password });
-      navigate(next, { replace: true });
+      await action({
+        beforeCommit: async () => {
+          stage.set({ phase: 'success' });
+          await settle();
+        },
+      });
     } catch (failure) {
       setError(failure);
-    } finally {
-      setBusy(false);
+      stage.jolt();
     }
   }
+
+  return { submit, error, phase };
+}
+
+function SubmitButton({ phase, idle, busy, done }) {
+  const working = phase === 'busy' || phase === 'success';
+  return (
+    <button type="submit" className="ss-auth-submit" data-phase={phase} aria-disabled={working || undefined} style={{ viewTransitionName: 'auth-submit' }}>
+      <span className="ss-auth-submit-face">
+        <span className="ss-auth-submit-label" style={{ viewTransitionName: 'auth-submit-label' }}>
+          {phase === 'busy' && <RegistrationMark state="sending" size={20} className="ss-auth-submit-mark" />}
+          {phase === 'success' && <Check aria-hidden="true" size={19} strokeWidth={2.75} />}
+          {phase === 'busy' ? busy : phase === 'success' ? done : idle}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function FormError({ error }) {
+  const message = describeAuthError(error);
+  if (!message) return null;
+  return (
+    <p role="alert" className="ss-auth-alert">
+      {message}
+    </p>
+  );
+}
+
+function AuthNotice({ tone, icon: Icon, title, children }) {
+  return (
+    <div role="status" className="ss-auth-notice" data-tone={tone}>
+      <Icon aria-hidden="true" size={18} strokeWidth={2.25} />
+      <div>
+        <p className="ss-auth-notice-title">{title}</p>
+        <p>{children}</p>
+      </div>
+    </div>
+  );
+}
+
+function AuthSwitch({ mode }) {
+  const suffix = useNextSuffix();
+  return (
+    <nav aria-label="Account" className="ss-auth-switch" data-mode={mode}>
+      <span className="ss-auth-switch-thumb" aria-hidden="true" />
+      <Link to={`/signin${suffix}`} viewTransition replace aria-current={mode === 'signin' ? 'page' : undefined}>
+        Sign in
+      </Link>
+      <Link to={`/register${suffix}`} viewTransition replace aria-current={mode === 'register' ? 'page' : undefined}>
+        Create account
+      </Link>
+    </nav>
+  );
+}
+
+/** The route element for /signin and /register: the form column and the light table. */
+export function AuthLayout() {
+  const auth = useAuth();
+  const location = useLocation();
+  const [params] = useSearchParams();
+  const mode = location.pathname.startsWith('/register') ? 'register' : 'signin';
+  const [stage] = useState(() => createAuthStage({ mode }));
+
+  // Signed in (already, or just now on this page once the table has settled): open the app.
+  if (auth.status === 'signed-in') return <Navigate to={safeNext(params.get('next'))} replace />;
+
+  return (
+    <div className="ss-auth">
+      <header className="ss-auth-bar">
+        <Brand />
+        <ThemeMenu />
+      </header>
+      <main id="main" className="ss-auth-main">
+        <div className="ss-auth-column">
+          <AuthSwitch mode={mode} />
+          <Outlet context={stage} />
+        </div>
+      </main>
+      <footer className="ss-auth-foot">
+        <p>
+          New to SyncSpace? <Link to="/">See how it works</Link>
+        </p>
+      </footer>
+      <RegistrationTable stage={stage} />
+    </div>
+  );
+}
+
+function useStageForm(stage, mode, progress) {
+  useEffect(() => {
+    stage.set({ mode, phase: 'idle' });
+  }, [stage, mode]);
+  useEffect(() => {
+    stage.set({ progress });
+  }, [stage, progress]);
+}
+
+export function SignInPage() {
+  const auth = useAuth();
+  const online = useOnline();
+  const stage = useOutletContext();
+  const [email, setEmail] = useState(auth.endedFor?.email ?? '');
+  const [password, setPassword] = useState('');
+  useStageForm(stage, 'signin', signInProgress({ email, password }));
+  const { submit, error, phase } = useAuthSubmit(stage, (options) => auth.signIn({ email, password }, options));
+  usePageTitle('Sign in to SyncSpace');
 
   const demoAccounts = import.meta.env.VITE_DEMO_ACCOUNTS ? JSON.parse(import.meta.env.VITE_DEMO_ACCOUNTS) : null;
 
   return (
-    <AuthLayout>
-      <div className="flex flex-col gap-4">
-        {auth.serverSignOutPending && (
-          <Notice tone="carbon" title="Signed out on this device">
-            You were offline, so the server hasn’t ended your session yet. SyncSpace ends it automatically the next time this
-            browser is online.
-          </Notice>
-        )}
-        {auth.endedFor && (
-          <Notice tone="carbon" title="Your session ended">
-            Sign in again as {auth.endedFor.name} to send any changes saved on this device.
-          </Notice>
-        )}
-        {!online && (
-          <Notice tone="caution" icon={WifiOff} title="You’re offline">
-            Signing in needs a connection. Documents already saved on this device open once you’re signed in.
-          </Notice>
-        )}
-        <form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-lg bg-sheet p-6 shadow-sheet">
-          <h2 className="text-xl font-bold">Sign in</h2>
-          <TextField
-            label="Email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            error={fieldError(error, 'email')}
-            required
-          />
-          <TextField
-            label="Password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={fieldError(error, 'password')}
-            required
-          />
-          {describeAuthError(error) && (
-            <p role="alert" className="text-sm font-semibold text-correction">
-              {describeAuthError(error)}
-            </p>
-          )}
-          <Button type="submit" variant="primary" disabled={busy}>
-            {busy ? 'Signing in…' : 'Sign in'}
-          </Button>
-          <p className="text-sm text-graphite">
-            New to SyncSpace?{' '}
-            <Link to={`/register${params.get('next') ? `?next=${encodeURIComponent(next)}` : ''}`} className="font-semibold text-carbon underline underline-offset-2">
-              Create an account
-            </Link>
-          </p>
-        </form>
-        {demoAccounts && (
-          <div className="rounded-lg border border-dashed border-rule-strong p-4 text-sm">
-            <p className="font-semibold">Demo accounts</p>
-            <ul className="mt-1 flex flex-col gap-1 text-graphite">
-              {demoAccounts.map((account) => (
-                <li key={account.email}>
-                  <button
-                    type="button"
-                    className="text-left underline underline-offset-2 hover:text-ink"
-                    onClick={() => {
-                      setEmail(account.email);
-                      setPassword(account.password);
-                    }}
-                  >
-                    {account.label}: {account.email}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    <>
+      <div className="ss-auth-heading">
+        <h1 style={{ viewTransitionName: 'auth-title' }}>Sign in to SyncSpace</h1>
+        <p style={{ viewTransitionName: 'auth-lede' }}>Documents kept on this device open as soon as you’re in, even offline.</p>
       </div>
-    </AuthLayout>
+
+      {(auth.serverSignOutPending || auth.endedFor || !online) && (
+        <div className="ss-auth-notices">
+          {auth.serverSignOutPending && (
+            <AuthNotice tone="carbon" icon={Info} title="Signed out on this device">
+              You were offline, so the server hasn’t ended your session yet. SyncSpace ends it automatically the next time this
+              browser is online.
+            </AuthNotice>
+          )}
+          {auth.endedFor && (
+            <AuthNotice tone="carbon" icon={Info} title="Your session ended">
+              Sign in again as {auth.endedFor.name} to send any changes saved on this device.
+            </AuthNotice>
+          )}
+          {!online && (
+            <AuthNotice tone="caution" icon={WifiOff} title="You’re offline">
+              Signing in needs a connection. Documents already saved on this device open once you’re signed in.
+            </AuthNotice>
+          )}
+        </div>
+      )}
+
+      <form className="ss-auth-form" onSubmit={submit} noValidate>
+        <AuthField
+          name="email"
+          label="Email"
+          type="email"
+          inputMode="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="next"
+          maxLength={LIMITS.emailMax}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          error={fieldError(error, 'email')}
+          required
+        />
+        <PasswordField
+          autoComplete="current-password"
+          enterKeyHint="go"
+          maxLength={LIMITS.passwordMax}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          error={fieldError(error, 'password')}
+          required
+        />
+        <FormError error={error} />
+        <SubmitButton phase={phase} idle="Sign in" busy="Signing in…" done="Signed in" />
+      </form>
+
+      {demoAccounts && (
+        <section className="ss-auth-demo" aria-labelledby="ss-auth-demo-title">
+          <h2 id="ss-auth-demo-title">Demo accounts</h2>
+          <ul>
+            {demoAccounts.map((account) => (
+              <li key={account.email}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(account.email);
+                    setPassword(account.password);
+                  }}
+                >
+                  <span>{account.label}</span>
+                  <span>{account.email}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
   );
 }
 
 export function RegisterPage() {
   const auth = useAuth();
-  const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const next = safeNext(params.get('next'));
+  const stage = useOutletContext();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(false);
-
-  if (auth.status === 'signed-in') return <Navigate to={next} replace />;
+  useStageForm(stage, 'register', registerProgress(form, LIMITS.passwordMin));
+  const { submit, error, phase } = useAuthSubmit(stage, (options) => auth.register(form, options));
+  usePageTitle('Create a SyncSpace account');
 
   const set = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
-
-  async function submit(event) {
-    event.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await auth.register(form);
-      navigate(next, { replace: true });
-    } catch (failure) {
-      setError(failure);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const remaining = LIMITS.passwordMin - form.password.length;
 
   return (
-    <AuthLayout>
-      <form onSubmit={submit} noValidate className="flex flex-col gap-4 rounded-lg bg-sheet p-6 shadow-sheet">
-        <h2 className="text-xl font-bold">Create an account</h2>
-        <TextField label="Your name" autoComplete="name" value={form.name} onChange={set('name')} error={fieldError(error, 'name')} hint="Shown to people you write with." required />
-        <TextField label="Email" type="email" autoComplete="email" value={form.email} onChange={set('email')} error={fieldError(error, 'email')} required />
-        <TextField
-          label="Password"
-          type="password"
+    <>
+      <div className="ss-auth-heading">
+        <h1 style={{ viewTransitionName: 'auth-title' }}>Create your account</h1>
+        <p style={{ viewTransitionName: 'auth-lede' }}>Start a workspace, then invite the people you write with.</p>
+      </div>
+
+      <form className="ss-auth-form" onSubmit={submit} noValidate>
+        <AuthField
+          name="name"
+          label="Your name"
+          autoComplete="name"
+          enterKeyHint="next"
+          maxLength={LIMITS.userNameMax}
+          value={form.name}
+          onChange={set('name')}
+          error={fieldError(error, 'name')}
+          hint="Shown to people you write with."
+          required
+        />
+        <AuthField
+          name="email"
+          label="Email"
+          type="email"
+          inputMode="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="next"
+          maxLength={LIMITS.emailMax}
+          value={form.email}
+          onChange={set('email')}
+          error={fieldError(error, 'email')}
+          required
+        />
+        <PasswordField
           autoComplete="new-password"
+          enterKeyHint="go"
+          maxLength={LIMITS.passwordMax}
+          minLength={LIMITS.passwordMin}
           value={form.password}
           onChange={set('password')}
           error={fieldError(error, 'password')}
-          hint="At least 10 characters. A short phrase works well."
+          hint={
+            form.password.length === 0
+              ? `At least ${LIMITS.passwordMin} characters. A short phrase works well.`
+              : remaining > 0
+                ? `${remaining} more ${remaining === 1 ? 'character' : 'characters'}.`
+                : 'Long enough.'
+          }
           required
         />
-        {describeAuthError(error) && (
-          <p role="alert" className="text-sm font-semibold text-correction">
-            {describeAuthError(error)}
-          </p>
-        )}
-        <Button type="submit" variant="primary" disabled={busy}>
-          {busy ? 'Creating your account…' : 'Create account'}
-        </Button>
-        <p className="text-sm text-graphite">
-          Already have an account?{' '}
-          <Link to={`/signin${params.get('next') ? `?next=${encodeURIComponent(next)}` : ''}`} className="font-semibold text-carbon underline underline-offset-2">
-            Sign in
-          </Link>
-        </p>
+        <FormError error={error} />
+        <SubmitButton phase={phase} idle="Create account" busy="Creating your account…" done="Account created" />
       </form>
-    </AuthLayout>
+    </>
   );
 }
